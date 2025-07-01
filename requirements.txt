@@ -1,0 +1,21 @@
+# Requirements for Leader Capacity Dashboard
+# Install with: pip install -r requirements.txt
+
+# Core data processing
+pandas>=1.3.0
+numpy>=1.21.0
+
+# Date handling (included in Python standard library)
+# datetime
+# calendar
+
+# Visualization (optional but recommended)
+matplotlib>=3.4.0
+seaborn>=0.11.0
+
+# Excel file handling
+openpyxl>=3.0.0
+
+# Additional utilities (optional)
+jupyter>=1.0.0
+notebook>=6.4.0 
