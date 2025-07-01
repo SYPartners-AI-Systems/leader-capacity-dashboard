@@ -1,0 +1,11 @@
+# Common files to ignore
+.DS_Store
+*.log
+node_modules/
+.env
+.env.local
+*.pyc
+__pycache__/
+.vscode/
+.idea/
+
