@@ -123,3 +123,9 @@ This project includes SQL transforms intended for a Domo MySQL DataFlow to creat
 
 Tip: If your Domo MySQL does not support CTEs/window functions, use the provided MySQL 5.7–compatible queries (no CTEs) from the conversation and adapt table names to your inputs.
 
+## SQL query library
+
+- comp + title override (MySQL 5.7): `SQL/comp_title_override_mysql57.sql`
+- misalignment report (MySQL 5.7): `SQL/misalignment_report_mysql57.sql`
+- salary philosophy mapping snippet (MySQL 5.7): `SQL/philosophy_mapping_snippet_mysql57.sql`
+
