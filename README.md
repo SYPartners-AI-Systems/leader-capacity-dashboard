@@ -92,3 +92,34 @@ The dashboard displays:
 - The notebook filters for specific leadership roles only
 - All timestamps are handled in UTC
 
+## 🧩 Domo MySQL DataFlows (Comp + Titles + Philosophy)
+
+This project includes SQL transforms intended for a Domo MySQL DataFlow to create a Consulting-only compensation history with title overrides and salary philosophy mapping.
+
+- Inputs (as shown in Domo left panel):
+  - `namely_comp_data_history_w_notes` (Namely Comp Data w/ Notes)
+  - `namely_title_history_data_aq` (Namely Title History)
+  - `Comp Philosophy - Salary Adjustments (input for modeling) - All.csv` (salary philosophy table)
+
+- Core rules applied in SQL (see `Consulting Salary History for Modeling/Consultants_Salary_Data_projection.SQL`):
+  - Division = Consulting; Start Date >= 2016-01-01
+  - Effective date for comp rows: `COALESCE(Salary Start Date, Start Date)`
+  - Title override from Title History:
+    - Prefer change within ±15 days of comp effective date (favor on/before)
+    - Fallback to latest title on/before comp effective date
+  - Title normalization: optional CASE mapping to canonical titles
+
+- Philosophy mapping (third input CSV):
+  - Columns used: `Step & Level`, `Annual Salary USD`, `Salary Start/End Effective Date`, `Department`, `Roles/ Titles`
+  - Blank philosophy end dates are treated as open-ended (current)
+  - Mapping method by comp effective date:
+    - Before 2022‑02‑01: nearest-step match by minimizing % difference between comp `Salary` and philosophy `Annual Salary`
+    - On/after 2022‑02‑01: exact match on `Step & Level` = `Level` + ' - Step ' + `Step`
+  - Output fields include mapped step/level, target annual salary, and variance %
+
+- Misalignment report:
+  - Separate SQL transform outputs rows where no title could be matched (neither ±15d nor fallback)
+  - Includes nearest title change dates before/after and a reason string for diagnosis
+
+Tip: If your Domo MySQL does not support CTEs/window functions, use the provided MySQL 5.7–compatible queries (no CTEs) from the conversation and adapt table names to your inputs.
+
