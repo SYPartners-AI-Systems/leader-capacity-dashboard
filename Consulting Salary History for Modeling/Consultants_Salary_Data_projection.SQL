@@ -42,8 +42,8 @@ FROM (
     t1.*,
     COALESCE(DATE(t1.`Salary Start Date`), DATE(t1.`Start Date`)) AS comp_effective_date
   FROM `namely_comp_data_history_w_notes` t1
-  WHERE UPPER(t1.`Division`) = 'CONSULTING'
-    AND DATE(t1.`Start Date`) >= '2016-01-01'
+  WHERE UPPER(TRIM(t1.`Division`)) = 'CONSULTING'
+    AND COALESCE(DATE(t1.`Salary Start Date`), DATE(t1.`Start Date`)) >= '2016-01-01'
 ) AS c
 
 /* ---------- Title matching: prefer on/before ≤15d, else after ≤15d ---------- */
@@ -58,10 +58,7 @@ LEFT JOIN (
       `Employee Number`
     FROM `namely_comp_data_history_w_notes`
     WHERE UPPER(`Division`) = 'CONSULTING'
-      AND (
-        DATE(`Start Date`) >= '2016-01-01'
-        OR UPPER(`User Status`) = 'ACTIVE'
-      )
+      AND COALESCE(DATE(`Salary Start Date`), DATE(`Start Date`)) >= '2016-01-01'
   ) AS p
   /* on/before within 15 days */
   LEFT JOIN (
@@ -73,10 +70,7 @@ LEFT JOIN (
         `Employee Number`
       FROM `namely_comp_data_history_w_notes`
       WHERE UPPER(`Division`) = 'CONSULTING'
-        AND (
-          DATE(`Start Date`) >= '2016-01-01'
-          OR UPPER(`User Status`) = 'ACTIVE'
-        )
+        AND COALESCE(DATE(`Salary Start Date`), DATE(`Start Date`)) >= '2016-01-01'
     ) p2
     JOIN (
       SELECT `Employee Number`, DATE(`Title Change Date`) AS title_change_date
@@ -99,10 +93,7 @@ LEFT JOIN (
         `Employee Number`
       FROM `namely_comp_data_history_w_notes`
       WHERE UPPER(`Division`) = 'CONSULTING'
-        AND (
-          DATE(`Start Date`) >= '2016-01-01'
-          OR UPPER(`User Status`) = 'ACTIVE'
-        )
+        AND COALESCE(DATE(`Salary Start Date`), DATE(`Start Date`)) >= '2016-01-01'
     ) p3
     JOIN (
       SELECT `Employee Number`, DATE(`Title Change Date`) AS title_change_date
@@ -140,10 +131,7 @@ LEFT JOIN (
       `Employee Number`
     FROM `namely_comp_data_history_w_notes`
     WHERE UPPER(`Division`) = 'CONSULTING'
-      AND (
-        DATE(`Start Date`) >= '2016-01-01'
-        OR UPPER(`User Status`) = 'ACTIVE'
-      )
+      AND COALESCE(DATE(`Salary Start Date`), DATE(`Start Date`)) >= '2016-01-01'
   ) AS p
   JOIN (
     SELECT `Employee Number`, DATE(`Title Change Date`) AS title_change_date
@@ -190,10 +178,7 @@ LEFT JOIN (
       COALESCE(DATE(`Salary Start Date`), DATE(`Start Date`)) AS comp_effective_date
     FROM `namely_comp_data_history_w_notes`
     WHERE UPPER(`Division`) = 'CONSULTING'
-      AND (
-        DATE(`Start Date`) >= '2016-01-01'
-        OR UPPER(`User Status`) = 'ACTIVE'
-      )
+      AND COALESCE(DATE(`Salary Start Date`), DATE(`Start Date`)) >= '2016-01-01'
   ) AS p
   JOIN (
     SELECT
@@ -235,10 +220,7 @@ LEFT JOIN (
       COALESCE(DATE(`Salary Start Date`), DATE(`Start Date`)) AS comp_effective_date
     FROM `namely_comp_data_history_w_notes`
     WHERE UPPER(`Division`) = 'CONSULTING'
-      AND (
-        DATE(`Start Date`) >= '2016-01-01'
-        OR UPPER(`User Status`) = 'ACTIVE'
-      )
+      AND COALESCE(DATE(`Salary Start Date`), DATE(`Start Date`)) >= '2016-01-01'
   ) AS p
   JOIN (
     SELECT
@@ -280,7 +262,6 @@ LEFT JOIN (
       COALESCE(DATE(`Salary Start Date`), DATE(`Start Date`)) AS comp_effective_date
     FROM `namely_comp_data_history_w_notes`
     WHERE UPPER(`Division`) = 'CONSULTING'
-      AND DATE(`Start Date`) >= '2016-01-01'
   ) AS p
   JOIN (
     SELECT
@@ -309,4 +290,5 @@ LEFT JOIN (
 ) AS div_ou
   ON div_ou.email      = LOWER(TRIM(c.`Work Email`))
  AND div_ou.start_date = div_match.matched_start_date
-;
+WHERE c.comp_effective_date >= '2016-01-01'
+  AND (tmeta.`Termination Date` IS NULL OR DATE(tmeta.`Termination Date`) >= '2016-01-01');
