@@ -20,7 +20,56 @@ SELECT
     WHEN prior.prior_date IS NULL THEN CONCAT('only future titles; nearest +', DATEDIFF(nexts.next_date, c.comp_effective_date), 'd')
     WHEN nexts.next_date IS NULL THEN CONCAT('only older titles; nearest -', DATEDIFF(c.comp_effective_date, prior.prior_date), 'd')
     ELSE 'no title within ±15d and none before used as fallback'
-  END AS `Reason`
+  END AS `Reason`,
+  c.`Work Email`                 AS `Work Email`,
+  CONCAT_WS('; ',
+    CASE
+      WHEN c.`Work Email` IS NULL OR TRIM(c.`Work Email`) = '' THEN 'missing work email'
+      ELSE NULL
+    END,
+    CASE
+      WHEN c.`Work Email` IS NULL OR TRIM(c.`Work Email`) = '' THEN NULL
+      WHEN NOT EXISTS (
+        SELECT 1
+        FROM `dataflow_schema`.`employee_org_units_dept_div_loc` ou_any
+        WHERE LOWER(TRIM(ou_any.`Email`)) = LOWER(TRIM(c.`Work Email`))
+      ) THEN 'no org-units for email'
+      ELSE NULL
+    END,
+    CASE
+      WHEN c.`Work Email` IS NULL OR TRIM(c.`Work Email`) = '' THEN NULL
+      WHEN EXISTS (
+        SELECT 1
+        FROM `dataflow_schema`.`employee_org_units_dept_div_loc` ou_d
+        WHERE LOWER(TRIM(ou_d.`Email`)) = LOWER(TRIM(c.`Work Email`))
+          AND TRIM(ou_d.`Org Type`) IN ('Department','Departments')
+          AND c.comp_effective_date BETWEEN DATE(ou_d.`Assignment Start Date`) AND COALESCE(DATE(ou_d.`Assignment End Date`), DATE('9999-12-31'))
+      ) THEN NULL
+      ELSE 'no Department covering comp date'
+    END,
+    CASE
+      WHEN c.`Work Email` IS NULL OR TRIM(c.`Work Email`) = '' THEN NULL
+      WHEN EXISTS (
+        SELECT 1
+        FROM `dataflow_schema`.`employee_org_units_dept_div_loc` ou_v
+        WHERE LOWER(TRIM(ou_v.`Email`)) = LOWER(TRIM(c.`Work Email`))
+          AND TRIM(ou_v.`Org Type`) IN ('Division','Divisions')
+          AND c.comp_effective_date BETWEEN DATE(ou_v.`Assignment Start Date`) AND COALESCE(DATE(ou_v.`Assignment End Date`), DATE('9999-12-31'))
+      ) THEN NULL
+      ELSE 'no Division covering comp date'
+    END,
+    CASE
+      WHEN c.`Work Email` IS NULL OR TRIM(c.`Work Email`) = '' THEN NULL
+      WHEN EXISTS (
+        SELECT 1
+        FROM `dataflow_schema`.`employee_org_units_dept_div_loc` ou_o
+        WHERE LOWER(TRIM(ou_o.`Email`)) = LOWER(TRIM(c.`Work Email`))
+          AND TRIM(ou_o.`Org Type`) IN ('Office Location','Office Locations','Location','Locations','Office')
+          AND c.comp_effective_date BETWEEN DATE(ou_o.`Assignment Start Date`) AND COALESCE(DATE(ou_o.`Assignment End Date`), DATE('9999-12-31'))
+      ) THEN NULL
+      ELSE 'no Office Location covering comp date'
+    END
+  ) AS `Org Units Notes`
 FROM
   ( SELECT
       t1.*,
