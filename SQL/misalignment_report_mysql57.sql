@@ -76,7 +76,10 @@ FROM
       COALESCE(DATE(t1.`Salary Start Date`), DATE(t1.`Start Date`)) AS comp_effective_date
     FROM `namely_comp_data_history_w_notes` t1
     WHERE UPPER(t1.`Division`) = 'CONSULTING'
-      AND DATE(t1.`Start Date`) >= '2016-01-01' ) AS c
+      AND (
+        DATE(t1.`Start Date`) >= '2016-01-01'
+        OR UPPER(t1.`User Status`) = 'ACTIVE'
+      ) ) AS c
 LEFT JOIN (
   SELECT
     p.`Employee Number`, p.comp_effective_date,
@@ -87,7 +90,10 @@ LEFT JOIN (
         `Employee Number`
       FROM `namely_comp_data_history_w_notes`
       WHERE UPPER(`Division`) = 'CONSULTING'
-        AND DATE(`Start Date`) >= '2016-01-01' ) AS p
+        AND (
+          DATE(`Start Date`) >= '2016-01-01'
+          OR UPPER(`User Status`) = 'ACTIVE'
+        ) ) AS p
     LEFT JOIN (
       SELECT p2.`Employee Number`, p2.comp_effective_date, MAX(th2.title_change_date) AS match_date
       FROM ( SELECT DISTINCT
@@ -95,7 +101,10 @@ LEFT JOIN (
                `Employee Number`
              FROM `namely_comp_data_history_w_notes`
              WHERE UPPER(`Division`) = 'CONSULTING'
-               AND DATE(`Start Date`) >= '2016-01-01' ) p2
+               AND (
+                 DATE(`Start Date`) >= '2016-01-01'
+                 OR UPPER(`User Status`) = 'ACTIVE'
+               ) ) p2
       JOIN ( SELECT `Employee Number`, DATE(`Title Change Date`) AS title_change_date
              FROM `namely_title_history_data_aq`
              WHERE `Title` IS NOT NULL ) th2
@@ -112,7 +121,10 @@ LEFT JOIN (
                `Employee Number`
              FROM `namely_comp_data_history_w_notes`
              WHERE UPPER(`Division`) = 'CONSULTING'
-               AND DATE(`Start Date`) >= '2016-01-01' ) p3
+               AND (
+                 DATE(`Start Date`) >= '2016-01-01'
+                 OR UPPER(`User Status`) = 'ACTIVE'
+               ) ) p3
       JOIN ( SELECT `Employee Number`, DATE(`Title Change Date`) AS title_change_date
              FROM `namely_title_history_data_aq`
              WHERE `Title` IS NOT NULL ) th3
@@ -132,7 +144,10 @@ LEFT JOIN (
            `Employee Number`
          FROM `namely_comp_data_history_w_notes`
          WHERE UPPER(`Division`) = 'CONSULTING'
-           AND DATE(`Start Date`) >= '2016-01-01' ) x
+           AND (
+             DATE(`Start Date`) >= '2016-01-01'
+             OR UPPER(`User Status`) = 'ACTIVE'
+           ) ) x
   LEFT JOIN `namely_title_history_data_aq` th
     ON th.`Employee Number` = x.`Employee Number`
    AND DATE(th.`Title Change Date`) <= x.comp_effective_date
@@ -150,7 +165,10 @@ LEFT JOIN (
            `Employee Number`
          FROM `namely_comp_data_history_w_notes`
          WHERE UPPER(`Division`) = 'CONSULTING'
-           AND DATE(`Start Date`) >= '2016-01-01' ) x
+           AND (
+             DATE(`Start Date`) >= '2016-01-01'
+             OR UPPER(`User Status`) = 'ACTIVE'
+           ) ) x
   LEFT JOIN `namely_title_history_data_aq` th
     ON th.`Employee Number` = x.`Employee Number`
    AND DATE(th.`Title Change Date`) >= x.comp_effective_date

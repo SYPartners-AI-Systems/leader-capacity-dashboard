@@ -58,7 +58,10 @@ LEFT JOIN (
       `Employee Number`
     FROM `namely_comp_data_history_w_notes`
     WHERE UPPER(`Division`) = 'CONSULTING'
-      AND DATE(`Start Date`) >= '2016-01-01'
+      AND (
+        DATE(`Start Date`) >= '2016-01-01'
+        OR UPPER(`User Status`) = 'ACTIVE'
+      )
   ) AS p
   /* on/before within 15 days */
   LEFT JOIN (
@@ -70,7 +73,10 @@ LEFT JOIN (
         `Employee Number`
       FROM `namely_comp_data_history_w_notes`
       WHERE UPPER(`Division`) = 'CONSULTING'
-        AND DATE(`Start Date`) >= '2016-01-01'
+        AND (
+          DATE(`Start Date`) >= '2016-01-01'
+          OR UPPER(`User Status`) = 'ACTIVE'
+        )
     ) p2
     JOIN (
       SELECT `Employee Number`, DATE(`Title Change Date`) AS title_change_date
@@ -93,7 +99,10 @@ LEFT JOIN (
         `Employee Number`
       FROM `namely_comp_data_history_w_notes`
       WHERE UPPER(`Division`) = 'CONSULTING'
-        AND DATE(`Start Date`) >= '2016-01-01'
+        AND (
+          DATE(`Start Date`) >= '2016-01-01'
+          OR UPPER(`User Status`) = 'ACTIVE'
+        )
     ) p3
     JOIN (
       SELECT `Employee Number`, DATE(`Title Change Date`) AS title_change_date
@@ -131,7 +140,10 @@ LEFT JOIN (
       `Employee Number`
     FROM `namely_comp_data_history_w_notes`
     WHERE UPPER(`Division`) = 'CONSULTING'
-      AND DATE(`Start Date`) >= '2016-01-01'
+      AND (
+        DATE(`Start Date`) >= '2016-01-01'
+        OR UPPER(`User Status`) = 'ACTIVE'
+      )
   ) AS p
   JOIN (
     SELECT `Employee Number`, DATE(`Title Change Date`) AS title_change_date
@@ -178,7 +190,10 @@ LEFT JOIN (
       COALESCE(DATE(`Salary Start Date`), DATE(`Start Date`)) AS comp_effective_date
     FROM `namely_comp_data_history_w_notes`
     WHERE UPPER(`Division`) = 'CONSULTING'
-      AND DATE(`Start Date`) >= '2016-01-01'
+      AND (
+        DATE(`Start Date`) >= '2016-01-01'
+        OR UPPER(`User Status`) = 'ACTIVE'
+      )
   ) AS p
   JOIN (
     SELECT
@@ -220,7 +235,10 @@ LEFT JOIN (
       COALESCE(DATE(`Salary Start Date`), DATE(`Start Date`)) AS comp_effective_date
     FROM `namely_comp_data_history_w_notes`
     WHERE UPPER(`Division`) = 'CONSULTING'
-      AND DATE(`Start Date`) >= '2016-01-01'
+      AND (
+        DATE(`Start Date`) >= '2016-01-01'
+        OR UPPER(`User Status`) = 'ACTIVE'
+      )
   ) AS p
   JOIN (
     SELECT
