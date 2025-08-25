@@ -8,17 +8,29 @@ SELECT
   -- Org Units: Office Location + dates
   office_ou.`Office_Location`                                  AS `Office Location`,
   office_ou.start_date                                         AS `Office Location Start Date`,
-  office_ou.end_date                                           AS `Office Location End Date`,
+  CASE
+    WHEN UPPER(TRIM(c.`User Status`)) = 'INACTIVE EMPLOYEE'
+      THEN COALESCE(office_ou.end_date, DATE(tmeta.`Termination Date`))
+    ELSE office_ou.end_date
+  END                                                         AS `Office Location End Date`,
 
   -- Org Units: Department + dates
   dept_ou.`Department`                                         AS `Department`,
   dept_ou.start_date                                           AS `Department Start Date`,
-  dept_ou.end_date                                             AS `Department End Date`,
+  CASE
+    WHEN UPPER(TRIM(c.`User Status`)) = 'INACTIVE EMPLOYEE'
+      THEN COALESCE(dept_ou.end_date, DATE(tmeta.`Termination Date`))
+    ELSE dept_ou.end_date
+  END                                                         AS `Department End Date`,
 
   -- Org Units: Division + dates
   div_ou.`Division`                                            AS `Division`,
   div_ou.start_date                                            AS `Division Start Date`,
-  div_ou.end_date                                              AS `Division End Date`,
+  CASE
+    WHEN UPPER(TRIM(c.`User Status`)) = 'INACTIVE EMPLOYEE'
+      THEN COALESCE(div_ou.end_date, DATE(tmeta.`Termination Date`))
+    ELSE div_ou.end_date
+  END                                                         AS `Division End Date`,
 
   -- Other comp fields
   c.`Salary Notes`,
