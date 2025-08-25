@@ -20,3 +20,7 @@ USD`, '$',''), ',', '') AS DECIMAL(12,2)) AS target_annual_salary_usd,
  AND (ph.ph_end_date IS NULL OR c.comp_effective_date <= ph.ph_end_date)
 
 
+
+
+
+
