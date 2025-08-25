@@ -53,7 +53,10 @@ SELECT
   c.`Employee Type`,
   c.`First Name`,
   tmeta.`Preferred First Name` AS `Preferred First Name`,
-  tmeta.`Termination Date` AS `Termination Date`
+  tmeta.`Termination Date` AS `Termination Date`,
+  COALESCE(ph_title_dept.target_annual_salary_usd,
+           ph_title_any.target_annual_salary_usd,
+           ph_map.target_annual_salary_usd)                  AS `Target Annual Salary USD`
 
 FROM (
   SELECT
@@ -306,6 +309,52 @@ LEFT JOIN (
 ) AS div_ou
   ON div_ou.email      = LOWER(TRIM(c.`Work Email`))
  AND div_ou.start_date = div_match.matched_start_date
+
+/* ---------- Salary philosophy mapping by Step/Level within date windows (Consulting only via Division) ---------- */
+LEFT JOIN (
+  SELECT
+    `Step & Level` AS step_level_key,
+    CAST(REPLACE(REPLACE(`Annual Salary\nUSD`, '$',''), ',', '') AS DECIMAL(12,2)) AS target_annual_salary_usd,
+    COALESCE(STR_TO_DATE(`Salary Start Effective Date`, '%M %d, %Y'),
+             STR_TO_DATE(`Salary Start Effective Date`, '%b %d, %Y')) AS ph_start_date,
+    COALESCE(STR_TO_DATE(`Salary End Effective Date`, '%M %d, %Y'),
+             STR_TO_DATE(`Salary End Effective Date`, '%b %d, %Y')) AS ph_end_date
+  FROM `dataflow_schema`.`consulting_comp_philosophy`
+) AS ph_map
+  ON ph_map.step_level_key = CONCAT(TRIM(c.`Level`), ' - Step ', TRIM(c.`Step`))
+ AND GREATEST(c.comp_effective_date, DATE('2016-01-01')) >= ph_map.ph_start_date
+ AND (ph_map.ph_end_date IS NULL OR GREATEST(c.comp_effective_date, DATE('2016-01-01')) <= ph_map.ph_end_date)
+ AND UPPER(TRIM(COALESCE(div_ou.`Division`, c.`Division`))) LIKE '%CONSULT%'
+
+/* ---------- Salary philosophy mapping by Title within date windows ---------- */
+LEFT JOIN (
+  SELECT
+    `Roles/ Titles` AS role_title,
+    CAST(REPLACE(REPLACE(`Annual Salary\nUSD`, '$',''), ',', '') AS DECIMAL(12,2)) AS target_annual_salary_usd,
+    COALESCE(STR_TO_DATE(`Salary Start Effective Date`, '%M %d, %Y'),
+             STR_TO_DATE(`Salary Start Effective Date`, '%b %d, %Y')) AS ph_start_date,
+    COALESCE(STR_TO_DATE(`Salary End Effective Date`, '%M %d, %Y'),
+             STR_TO_DATE(`Salary End Effective Date`, '%b %d, %Y')) AS ph_end_date
+  FROM `dataflow_schema`.`consulting_comp_philosophy`
+  WHERE UPPER(TRIM(`Department`)) LIKE '%CONSULT%'
+) AS ph_title_dept
+  ON UPPER(TRIM(ph_title_dept.role_title)) = UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`)))
+ AND GREATEST(c.comp_effective_date, DATE('2016-01-01')) >= ph_title_dept.ph_start_date
+ AND (ph_title_dept.ph_end_date IS NULL OR GREATEST(c.comp_effective_date, DATE('2016-01-01')) <= ph_title_dept.ph_end_date)
+
+LEFT JOIN (
+  SELECT
+    `Roles/ Titles` AS role_title,
+    CAST(REPLACE(REPLACE(`Annual Salary\nUSD`, '$',''), ',', '') AS DECIMAL(12,2)) AS target_annual_salary_usd,
+    COALESCE(STR_TO_DATE(`Salary Start Effective Date`, '%M %d, %Y'),
+             STR_TO_DATE(`Salary Start Effective Date`, '%b %d, %Y')) AS ph_start_date,
+    COALESCE(STR_TO_DATE(`Salary End Effective Date`, '%M %d, %Y'),
+             STR_TO_DATE(`Salary End Effective Date`, '%b %d, %Y')) AS ph_end_date
+  FROM `dataflow_schema`.`consulting_comp_philosophy`
+) AS ph_title_any
+  ON UPPER(TRIM(ph_title_any.role_title)) = UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`)))
+ AND GREATEST(c.comp_effective_date, DATE('2016-01-01')) >= ph_title_any.ph_start_date
+ AND (ph_title_any.ph_end_date IS NULL OR GREATEST(c.comp_effective_date, DATE('2016-01-01')) <= ph_title_any.ph_end_date)
 /* Overlap window: include any rows whose period intersects 2016-01-01+ */
 WHERE (
         (mlt_transition.mlt_start_date IS NOT NULL AND c.comp_effective_date < mlt_transition.mlt_start_date)
