@@ -3,7 +3,7 @@ SELECT
   c.`Salary Currency`,
   COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`)        AS `Job Title`,
   COALESCE(chosen.chosen_date, fb.fb_date)                     AS `Title Change Date (Used)`,
-  c.comp_effective_date                                        AS `Comp Effective Date`,
+  GREATEST(c.comp_effective_date, DATE('2016-01-01'))          AS `Comp Effective Date`,
 
   -- Org Units: Office Location + dates
   office_ou.`Office_Location`                                  AS `Office Location`,
@@ -25,7 +25,13 @@ SELECT
   c.`Start Date` AS `Hire Date`,
   c.`Employee Number`,
   c.`Level`,
-  c.`Salary End Date`,
+  CASE
+    WHEN mlt_transition.mlt_start_date IS NOT NULL THEN LEAST(
+      COALESCE(DATE(c.`Salary End Date`), DATE('9999-12-31')),
+      DATE_SUB(mlt_transition.mlt_start_date, INTERVAL 1 DAY)
+    )
+    ELSE c.`Salary End Date`
+  END AS `Salary End Date`,
   c.`Step`,
   c.`Salary Start Date`,
   c.`User Status`,
@@ -42,9 +48,19 @@ FROM (
     t1.*,
     COALESCE(DATE(t1.`Salary Start Date`), DATE(t1.`Start Date`)) AS comp_effective_date
   FROM `namely_comp_data_history_w_notes` t1
-  WHERE UPPER(TRIM(t1.`Division`)) = 'CONSULTING'
-    AND COALESCE(DATE(t1.`Salary Start Date`), DATE(t1.`Start Date`)) >= '2016-01-01'
 ) AS c
+
+/* ---------- MLT transition: earliest Division=MLT start per employee ---------- */
+LEFT JOIN (
+  SELECT
+    LOWER(TRIM(`Email`)) AS email,
+    MIN(DATE(`Assignment Start Date`)) AS mlt_start_date
+  FROM `dataflow_schema`.`employee_org_units_dept_div_loc`
+  WHERE TRIM(`Org Type`) IN ('Division','Divisions')
+    AND UPPER(TRIM(`Org Unit`)) = 'MLT'
+  GROUP BY LOWER(TRIM(`Email`))
+) AS mlt_transition
+  ON mlt_transition.email = LOWER(TRIM(c.`Work Email`))
 
 /* ---------- Title matching: prefer on/before ≤15d, else after ≤15d ---------- */
 LEFT JOIN (
@@ -57,8 +73,6 @@ LEFT JOIN (
       COALESCE(DATE(`Salary Start Date`), DATE(`Start Date`)) AS comp_effective_date,
       `Employee Number`
     FROM `namely_comp_data_history_w_notes`
-    WHERE UPPER(`Division`) = 'CONSULTING'
-      AND COALESCE(DATE(`Salary Start Date`), DATE(`Start Date`)) >= '2016-01-01'
   ) AS p
   /* on/before within 15 days */
   LEFT JOIN (
@@ -69,8 +83,6 @@ LEFT JOIN (
         COALESCE(DATE(`Salary Start Date`), DATE(`Start Date`)) AS comp_effective_date,
         `Employee Number`
       FROM `namely_comp_data_history_w_notes`
-      WHERE UPPER(`Division`) = 'CONSULTING'
-        AND COALESCE(DATE(`Salary Start Date`), DATE(`Start Date`)) >= '2016-01-01'
     ) p2
     JOIN (
       SELECT `Employee Number`, DATE(`Title Change Date`) AS title_change_date
@@ -92,8 +104,6 @@ LEFT JOIN (
         COALESCE(DATE(`Salary Start Date`), DATE(`Start Date`)) AS comp_effective_date,
         `Employee Number`
       FROM `namely_comp_data_history_w_notes`
-      WHERE UPPER(`Division`) = 'CONSULTING'
-        AND COALESCE(DATE(`Salary Start Date`), DATE(`Start Date`)) >= '2016-01-01'
     ) p3
     JOIN (
       SELECT `Employee Number`, DATE(`Title Change Date`) AS title_change_date
@@ -130,8 +140,6 @@ LEFT JOIN (
       COALESCE(DATE(`Salary Start Date`), DATE(`Start Date`)) AS comp_effective_date,
       `Employee Number`
     FROM `namely_comp_data_history_w_notes`
-    WHERE UPPER(`Division`) = 'CONSULTING'
-      AND COALESCE(DATE(`Salary Start Date`), DATE(`Start Date`)) >= '2016-01-01'
   ) AS p
   JOIN (
     SELECT `Employee Number`, DATE(`Title Change Date`) AS title_change_date
@@ -177,8 +185,6 @@ LEFT JOIN (
       LOWER(TRIM(`Work Email`)) AS `Work Email`,
       COALESCE(DATE(`Salary Start Date`), DATE(`Start Date`)) AS comp_effective_date
     FROM `namely_comp_data_history_w_notes`
-    WHERE UPPER(`Division`) = 'CONSULTING'
-      AND COALESCE(DATE(`Salary Start Date`), DATE(`Start Date`)) >= '2016-01-01'
   ) AS p
   JOIN (
     SELECT
@@ -219,8 +225,6 @@ LEFT JOIN (
       LOWER(TRIM(`Work Email`)) AS `Work Email`,
       COALESCE(DATE(`Salary Start Date`), DATE(`Start Date`)) AS comp_effective_date
     FROM `namely_comp_data_history_w_notes`
-    WHERE UPPER(`Division`) = 'CONSULTING'
-      AND COALESCE(DATE(`Salary Start Date`), DATE(`Start Date`)) >= '2016-01-01'
   ) AS p
   JOIN (
     SELECT
@@ -290,5 +294,24 @@ LEFT JOIN (
 ) AS div_ou
   ON div_ou.email      = LOWER(TRIM(c.`Work Email`))
  AND div_ou.start_date = div_match.matched_start_date
-WHERE c.comp_effective_date >= '2016-01-01'
+/* Overlap window: include any rows whose period intersects 2016-01-01+ */
+WHERE (
+        (mlt_transition.mlt_start_date IS NOT NULL AND c.comp_effective_date < mlt_transition.mlt_start_date)
+        OR (
+          mlt_transition.mlt_start_date IS NULL AND (
+            UPPER(TRIM(COALESCE(div_ou.`Division`, c.`Division`))) LIKE '%CONSULT%'
+            OR UPPER(TRIM(dept_ou.`Department`)) LIKE '%CONSULT%'
+          )
+        )
+      )
+  AND COALESCE(
+        CASE
+          WHEN mlt_transition.mlt_start_date IS NOT NULL THEN LEAST(
+            COALESCE(DATE(c.`Salary End Date`), DATE('9999-12-31')),
+            DATE_SUB(mlt_transition.mlt_start_date, INTERVAL 1 DAY)
+          )
+          ELSE COALESCE(DATE(c.`Salary End Date`), DATE('9999-12-31'))
+        END,
+        DATE('9999-12-31')
+      ) >= DATE('2016-01-01')
   AND (tmeta.`Termination Date` IS NULL OR DATE(tmeta.`Termination Date`) >= '2016-01-01');
