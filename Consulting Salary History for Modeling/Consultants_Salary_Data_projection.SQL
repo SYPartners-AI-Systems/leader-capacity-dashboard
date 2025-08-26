@@ -36,7 +36,8 @@ SELECT
   c.`Salary Notes`,
   c.`Start Date` AS `Hire Date`,
   c.`Employee Number`,
-  COALESCE(ph_title_dept.ph_level,
+  COALESCE(NULLIF(TRIM(c.`Level`), ''),
+           ph_title_dept.ph_level,
            ph_title_any.ph_level,
            ph_dept_pre.ph_level)                                AS `Level`,
   CASE
@@ -46,7 +47,8 @@ SELECT
     )
     ELSE c.`Salary End Date`
   END AS `Salary End Date`,
-  COALESCE(ph_title_dept.ph_step,
+  COALESCE(NULLIF(TRIM(c.`Step`), ''),
+           ph_title_dept.ph_step,
            ph_title_any.ph_step,
            ph_dept_pre.ph_step)                                 AS `Step`,
   c.`Salary Start Date`,
@@ -566,5 +568,4 @@ WHERE (
         END,
         DATE('9999-12-31')
       ) >= DATE('2016-01-01')
-  AND (tmeta.`Termination Date` IS NULL OR DATE(tmeta.`Termination Date`) >= '2016-01-01')
-;
+  AND (tmeta.`Termination Date` IS NULL OR DATE(tmeta.`Termination Date`) >= '2016-01-01');
