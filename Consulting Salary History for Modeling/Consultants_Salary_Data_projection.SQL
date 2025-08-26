@@ -36,10 +36,12 @@ SELECT
   c.`Salary Notes`,
   c.`Start Date` AS `Hire Date`,
   c.`Employee Number`,
-  COALESCE(NULLIF(TRIM(c.`Level`), ''),
-           ph_title_dept.ph_level,
-           ph_title_any.ph_level,
-           ph_dept_pre.ph_level)                                AS `Level`,
+  CASE
+    WHEN c.comp_effective_date = latest_effective.latest_comp_effective_date
+      AND NULLIF(TRIM(c.`Level`), '') IS NOT NULL
+      THEN TRIM(c.`Level`)
+    ELSE COALESCE(ph_title_dept.ph_level, ph_title_any.ph_level, ph_dept_pre.ph_level)
+  END                                                   AS `Level`,
   CASE
     WHEN mlt_transition.mlt_start_date IS NOT NULL THEN LEAST(
       COALESCE(DATE(c.`Salary End Date`), DATE('9999-12-31')),
@@ -47,10 +49,12 @@ SELECT
     )
     ELSE c.`Salary End Date`
   END AS `Salary End Date`,
-  COALESCE(NULLIF(TRIM(c.`Step`), ''),
-           ph_title_dept.ph_step,
-           ph_title_any.ph_step,
-           ph_dept_pre.ph_step)                                 AS `Step`,
+  CASE
+    WHEN c.comp_effective_date = latest_effective.latest_comp_effective_date
+      AND NULLIF(TRIM(c.`Step`), '') IS NOT NULL
+      THEN TRIM(c.`Step`)
+    ELSE COALESCE(ph_title_dept.ph_step, ph_title_any.ph_step, ph_dept_pre.ph_step)
+  END                                                   AS `Step`,
   c.`Salary Start Date`,
   c.`User Status`,
   c.`Last Name`,
@@ -70,6 +74,16 @@ FROM (
     COALESCE(DATE(t1.`Salary Start Date`), DATE(t1.`Start Date`)) AS comp_effective_date
   FROM `namely_comp_data_history_w_notes` t1
 ) AS c
+
+/* Latest comp effective date per employee */
+LEFT JOIN (
+  SELECT
+    `Employee Number`,
+    MAX(COALESCE(DATE(`Salary Start Date`), DATE(`Start Date`))) AS latest_comp_effective_date
+  FROM `namely_comp_data_history_w_notes`
+  GROUP BY `Employee Number`
+) AS latest_effective
+  ON latest_effective.`Employee Number` = c.`Employee Number`
 
 /* ---------- MLT transition: earliest Division=MLT start per employee ---------- */
 LEFT JOIN (
@@ -529,43 +543,4 @@ LEFT JOIN (
        SELECT MIN(ABS(CAST(REPLACE(REPLACE(p0.`Annual Salary\nUSD`, '$',''), ',', '') AS DECIMAL(12,2)) - c.`Salary`))
        FROM `dataflow_schema`.`consulting_comp_philosophy` p0
        WHERE UPPER(TRIM(p0.`Department`)) = UPPER(TRIM(COALESCE(dept_ou.`Department`, div_ou.`Division`, c.`Division`)))
-         AND GREATEST(c.comp_effective_date, DATE('2016-01-01')) >= COALESCE(
-               STR_TO_DATE(p0.`Salary Start Effective Date`, '%M %d, %Y'),
-               STR_TO_DATE(p0.`Salary Start Effective Date`, '%b %d, %Y'),
-               DATE(p0.`Salary Start Effective Date`)
-             )
-         AND (
-               COALESCE(
-                 STR_TO_DATE(p0.`Salary End Effective Date`, '%M %d, %Y'),
-                 STR_TO_DATE(p0.`Salary End Effective Date`, '%b %d, %Y'),
-                 DATE(p0.`Salary End Effective Date`)
-               ) IS NULL
-               OR GREATEST(c.comp_effective_date, DATE('2016-01-01')) <= COALESCE(
-                    STR_TO_DATE(p0.`Salary End Effective Date`, '%M %d, %Y'),
-                    STR_TO_DATE(p0.`Salary End Effective Date`, '%b %d, %Y'),
-                    DATE(p0.`Salary End Effective Date`)
-               )
-             )
-     )
-
-/* Overlap window: include any rows whose period intersects 2016-01-01+ */
-WHERE (
-        (mlt_transition.mlt_start_date IS NOT NULL AND c.comp_effective_date < mlt_transition.mlt_start_date)
-        OR (
-          mlt_transition.mlt_start_date IS NULL AND (
-            UPPER(TRIM(COALESCE(div_ou.`Division`, c.`Division`))) LIKE '%CONSULT%'
-            OR UPPER(TRIM(dept_ou.`Department`)) LIKE '%CONSULT%'
-          )
-        )
-      )
-  AND COALESCE(
-        CASE
-          WHEN mlt_transition.mlt_start_date IS NOT NULL THEN LEAST(
-            COALESCE(DATE(c.`Salary End Date`), DATE('9999-12-31')),
-            DATE_SUB(mlt_transition.mlt_start_date, INTERVAL 1 DAY)
-          )
-          ELSE COALESCE(DATE(c.`Salary End Date`), DATE('9999-12-31'))
-        END,
-        DATE('9999-12-31')
-      ) >= DATE('2016-01-01')
-  AND (tmeta.`Termination Date` IS NULL OR DATE(tmeta.`Termination Date`) >= '2016-01-01');
+      );
