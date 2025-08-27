@@ -101,8 +101,9 @@ CROSS JOIN (
     ) AS fbtit ON fbtit.`Employee Number` = c.`Employee Number` AND fbtit.title_change_date = fb.fb_date
     WHERE UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) = 'CREATIVE DIRECTOR'
       AND UPPER(TRIM(c.`Employee Type`)) = 'STAFF FULL TIME'
-      AND UPPER(TRIM(c.`Type`)) IN ('YEARLY','SALARY','SALARIED','ANNUAL')
+      AND UPPER(TRIM(c.`Type`)) IN ('YEARLY','SALARY','SALARIED')
       AND c.`Salary` IS NOT NULL
+      AND REPLACE(REPLACE(c.`Salary`, '$',''), ',', '') REGEXP '^[0-9]+(\\.[0-9]+)?$'
       AND CAST(REPLACE(REPLACE(c.`Salary`, '$',''), ',', '') AS DECIMAL(12,2)) > 0
       AND c.comp_effective_date BETWEEN DATE('2016-01-01') AND DATE('2022-01-31')
   ) AS base_for_count
@@ -184,6 +185,7 @@ LEFT JOIN (
         AND UPPER(TRIM(c.`Employee Type`)) = 'STAFF FULL TIME'
         AND UPPER(TRIM(c.`Type`)) IN ('YEARLY','SALARY','SALARIED','ANNUAL')
         AND c.`Salary` IS NOT NULL
+        AND REPLACE(REPLACE(c.`Salary`, '$',''), ',', '') REGEXP '^[0-9]+(\\.[0-9]+)?$'
         AND CAST(REPLACE(REPLACE(c.`Salary`, '$',''), ',', '') AS DECIMAL(12,2)) > 0
         AND c.comp_effective_date BETWEEN DATE('2016-01-01') AND DATE('2022-01-31')
     ) AS base
@@ -281,11 +283,12 @@ CROSS JOIN (
       FROM `namely_title_history_data_aq`
       WHERE `Title` IS NOT NULL
     ) AS fbtit ON fbtit.`Employee Number` = c.`Employee Number` AND fbtit.title_change_date = fb.fb_date
-    WHERE UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) = 'STRATEGY DIRECTOR'
+    WHERE TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`)) LIKE 'Strategy Director%'
       AND UPPER(TRIM(c.`Employee Type`)) = 'STAFF FULL TIME'
       AND UPPER(TRIM(c.`Type`)) IN ('YEARLY','SALARY','SALARIED','ANNUAL')
       AND c.`Salary` IS NOT NULL
-      AND CAST(REPLACE(REPLACE(c.`Salary`, '$',''), ',', '') AS DECIMAL(12,2)) > 0
+      AND REPLACE(REPLACE(c.`Salary`, '$',''), ',', '') REGEXP '^[0-9]+(\\.[0-9]+)?$'
+      AND CAST(REPLACE(REPLACE(c.`Salary`, '$',''), ',', '') AS DECIMAL(12,2)) >= 100000
       AND c.comp_effective_date BETWEEN DATE('2016-01-01') AND DATE('2022-01-31')
   ) AS base_for_count
 ) AS cnt
@@ -362,11 +365,12 @@ LEFT JOIN (
         FROM `namely_title_history_data_aq`
         WHERE `Title` IS NOT NULL
       ) AS fbtit ON fbtit.`Employee Number` = c.`Employee Number` AND fbtit.title_change_date = fb.fb_date
-      WHERE UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) = 'STRATEGY DIRECTOR'
+      WHERE TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`)) LIKE 'Strategy Director%'
         AND UPPER(TRIM(c.`Employee Type`)) = 'STAFF FULL TIME'
         AND UPPER(TRIM(c.`Type`)) IN ('YEARLY','SALARY','SALARIED','ANNUAL')
         AND c.`Salary` IS NOT NULL
-        AND CAST(REPLACE(REPLACE(c.`Salary`, '$',''), ',', '') AS DECIMAL(12,2)) > 0
+        AND REPLACE(REPLACE(c.`Salary`, '$',''), ',', '') REGEXP '^[0-9]+(\\.[0-9]+)?$'
+        AND CAST(REPLACE(REPLACE(c.`Salary`, '$',''), ',', '') AS DECIMAL(12,2)) >= 100000
         AND c.comp_effective_date BETWEEN DATE('2016-01-01') AND DATE('2022-01-31')
     ) AS base
     CROSS JOIN (SELECT @rn_sd := 0) AS vars
@@ -467,6 +471,7 @@ CROSS JOIN (
       AND UPPER(TRIM(c.`Employee Type`)) = 'STAFF FULL TIME'
       AND UPPER(TRIM(c.`Type`)) IN ('YEARLY','SALARY','SALARIED','ANNUAL')
       AND c.`Salary` IS NOT NULL
+      AND REPLACE(REPLACE(c.`Salary`, '$',''), ',', '') REGEXP '^[0-9]+(\\.[0-9]+)?$'
       AND CAST(REPLACE(REPLACE(c.`Salary`, '$',''), ',', '') AS DECIMAL(12,2)) > 0
       AND c.comp_effective_date BETWEEN DATE('2016-01-01') AND DATE('2022-01-31')
   ) AS base_for_count
@@ -548,6 +553,7 @@ LEFT JOIN (
         AND UPPER(TRIM(c.`Employee Type`)) = 'STAFF FULL TIME'
         AND UPPER(TRIM(c.`Type`)) IN ('YEARLY','SALARY','SALARIED','ANNUAL')
         AND c.`Salary` IS NOT NULL
+        AND REPLACE(REPLACE(c.`Salary`, '$',''), ',', '') REGEXP '^[0-9]+(\\.[0-9]+)?$'
         AND CAST(REPLACE(REPLACE(c.`Salary`, '$',''), ',', '') AS DECIMAL(12,2)) > 0
         AND c.comp_effective_date BETWEEN DATE('2016-01-01') AND DATE('2022-01-31')
     ) AS base
