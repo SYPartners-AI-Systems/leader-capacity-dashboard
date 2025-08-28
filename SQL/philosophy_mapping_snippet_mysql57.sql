@@ -24,3 +24,4 @@ USD`, '$',''), ',', '') AS DECIMAL(12,2)) AS target_annual_salary_usd,
 
 
 
+

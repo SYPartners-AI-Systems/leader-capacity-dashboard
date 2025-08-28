@@ -1,3 +1,51 @@
+## Multi-Role Compensation Bands: What We Did, Learned, and Final SQL (2016-01-01 to 2022-01-31)
+
+### Context
+- We built percentile-based compensation bands for three roles: Creative Director (CD), Strategy Director (SD), and Program Director (PD).
+- Source datasets:
+  - `namely_comp_data_history_w_notes` (compensation events)
+  - `namely_title_history_data_aq` (title history)
+
+### How the data is merged (title-to-comp matching)
+- Base rows come from `namely_comp_data_history_w_notes`, with `comp_effective_date = COALESCE(Salary Start Date, Start Date)`.
+- For each comp row (per `Employee Number` + `comp_effective_date`), we select the most appropriate title from `namely_title_history_data_aq` using:
+  1) On/before within 15 days (latest) → if none
+  2) After within 15 days (earliest) → if none
+  3) Fallback to latest prior title (no 15-day constraint) → if none
+  4) Fallback to the comp row's original `Job Title`.
+- All comp→title joins are left joins to preserve comp rows.
+
+### Role-specific filters (final)
+- Creative Director:
+  - `Department = 'Design'`
+  - Exclude titles containing "Freelance" (checked against the normalized title `COALESCE(mtit.Title, fbtit.Title, c.Job Title)`).
+- Strategy Director:
+  - `Department = 'Strategy'`
+  - Exclude titles containing "Freelance"
+  - Salary floor applied for SD: `>= 100000`
+- Program Director:
+  - `Department = 'Program Management'`
+  - Exclude titles containing "Freelance"
+
+### Step logic (final)
+- Step 1: minimum salary from the filtered set.
+- Step 2: median-ish (rank-based) from the same filtered set, with guardrails to ensure it differs from the minimum:
+  - For SD and PD: derived via "next distinct salary above the minimum" helper (second-min) and then rounded down to a clean band.
+  - For CD: derived via the same second-min approach and rounded down to a clean band.
+- Step 3: ~90th percentile (rank-based) from the same filtered set.
+
+### Rounding (final decision)
+- We round Step 2 for all three roles down to the nearest 5,000 (i.e., `FLOOR(value/5000)*5000`). This produces cleaner bands and avoids Step 2 ≈ Step 3 when the dataset is small or clustered at the top. This rounding is mirrored in the single-role Creative Director SQL as well.
+
+### Key issues we found and resolved
+- Filter mismatch: Ranking subqueries initially did not fully match the counting/filtering logic (e.g., missing `Department` filter or SD salary floor). This caused unexpected Step values (like a global min sneaking in). We aligned all filters.
+- Excluding Freelancers: We added `... NOT LIKE '%FREELANCE%'` checks to CD, SD, and PD across both count and ranking blocks.
+- Department scoping: SD → `Strategy`, PD → `Program Management`, CD → `Design`. Ensured applied consistently everywhere.
+- Step 2 too close to Step 3: With small N (e.g., 5 records) and top-heavy distributions, the 50th and 90th percentile can converge. We implemented the second-min logic and then rounded Step 2 to 5k bands.
+- Syntax bug: A duplicated `WHERE` in the PD ranking block caused a MySQL syntax error; removed the duplicate.
+
+### Final multi-role SQL
+```sql
 /* ----------------------------------------------------------------------------
    Multi-role compensation band calculation (2016-01-01 to 2022-01-31)
    Roles: Creative Director, Strategy Director, Program Director
@@ -14,9 +62,6 @@
      else after within 15 days; fallback to latest prior title if needed.
    - Filters: Employee Type = 'Staff Full Time', Type in {'yearly','salary','salaried','annual'},
      Salary not null and > 0, comp_effective_date within range.
-   - Step 2 rounding: For all three roles (CD/SD/PD), Step 2 is rounded down to
-     the nearest $5,000 via FLOOR(value/5000)*5000 to produce clean, separated
-     bands and avoid Step 2 ≈ Step 3 in small or top-heavy datasets.
 ---------------------------------------------------------------------------- */
 
 (
@@ -930,7 +975,7 @@ CROSS JOIN (
           AND DATEDIFF(th3.title_change_date, p3.comp_effective_date) <= 15
         GROUP BY p3.`Employee Number`, p3.comp_effective_date
       ) af ON af.`Employee Number` = p.`Employee Number` AND af.comp_effective_date = p.comp_effective_date
-    ) AS chosen ON chosen.`Employee Number` = c.`Employee Number` AND chosen.comp_effective_date = c.comp_effective_date
+    ) As chosen ON chosen.`Employee Number` = c.`Employee Number` AND chosen.comp_effective_date = c.comp_effective_date
     LEFT JOIN (
       SELECT `Employee Number`, DATE(`Title Change Date`) AS title_change_date, `Title`
       FROM `namely_title_history_data_aq`
@@ -1099,7 +1144,7 @@ LEFT JOIN (
       LEFT JOIN (
         SELECT p.`Employee Number`, p.comp_effective_date, MAX(th.title_change_date) AS fb_date
         FROM (
-          SELECT DISTINCT COALESCE(DATE(`Salary Start Date`), DATE(`Start Date`)) AS comp_effective_date, `Employee Number`
+          SELECT DISTINCT COALESCE(DATE(`Salary Start Date`), DATE(`Start Date`)) AS comp_effective date, `Employee Number`
           FROM `namely_comp_data_history_w_notes`
         ) AS p
         JOIN (
@@ -1135,3 +1180,20 @@ ON r.rn = CASE
 END
 )
 ORDER BY `Role`, `Step Order`;
+```
+
+### Additional notes for future maintainers
+- If a role’s dataset is small (e.g., <10 rows) or top-heavy, consider Step 2 rounding to keep bands visually distinct.
+- If you add more roles, copy an existing block and ensure:
+  - Title normalization is used consistently in filters
+  - Department filters match expectations
+  - Any salary floors are applied consistently across count/rank/second-min blocks
+  - Freelance exclusion is applied in all relevant subqueries
+- We also updated the single-role Creative Director SQL to exclude "Freelance" and to compute Step 2 from the next distinct salary above the minimum to avoid Step 1/2 equality.
+
+### Lessons learned
+- Keep filters identical between the counting (N) and the ranking/selection subqueries, or you’ll compute percentiles from the wrong set.
+- For small-N distributions, pure percentile ranks may converge; a second-min guard plus band rounding is a pragmatic fix.
+- Always normalize title text from the chosen date before filtering, and retain fallbacks to handle messy histories.
+
+
