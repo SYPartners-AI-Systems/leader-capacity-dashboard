@@ -155,6 +155,7 @@ FROM (
         AND CAST(REPLACE(REPLACE(c.`Salary`, '$',''), ',', '') AS DECIMAL(12,2)) > 0
         AND c.comp_effective_date BETWEEN DATE('2016-01-01') AND DATE('2022-01-31')
         AND UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) NOT LIKE '%FREELANCE%'
+        AND c.`Employee Number` <> 'EMP-000922'
     ) AS b
     WHERE b.role_key IS NOT NULL
     GROUP BY role_key
@@ -244,6 +245,7 @@ FROM (
         AND CAST(REPLACE(REPLACE(c.`Salary`, '$',''), ',', '') AS DECIMAL(12,2)) > 0
         AND c.comp_effective_date BETWEEN DATE('2016-01-01') AND DATE('2022-01-31')
         AND UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) NOT LIKE '%FREELANCE%'
+        AND c.`Employee Number` <> 'EMP-000922'
         AND (
           UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) IN ('AUDIO PRODUCER','UX DESIGNER','USER EXPERIENCE DESIGNER')
           OR UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) IN ('SENIOR AUDIO PRODUCER','SENIOR UX DESIGNER','SENIOR USER EXPERIENCE RESEARCHER')
@@ -344,6 +346,7 @@ FROM (
             AND CAST(REPLACE(REPLACE(c.`Salary`, '$',''), ',', '') AS DECIMAL(12,2)) > 0
             AND c.comp_effective_date BETWEEN DATE('2016-01-01') AND DATE('2022-01-31')
             AND UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) NOT LIKE '%FREELANCE%'
+            AND c.`Employee Number` <> 'EMP-000922'
             AND (
               UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) IN ('AUDIO PRODUCER','UX DESIGNER','USER EXPERIENCE DESIGNER')
               OR UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) IN ('SENIOR AUDIO PRODUCER','SENIOR UX DESIGNER','SENIOR USER EXPERIENCE RESEARCHER')
@@ -446,6 +449,7 @@ FROM (
             AND CAST(REPLACE(REPLACE(c.`Salary`, '$',''), ',', '') AS DECIMAL(12,2)) > 0
             AND c.comp_effective_date BETWEEN DATE('2016-01-01') AND DATE('2022-01-31')
             AND UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) NOT LIKE '%FREELANCE%'
+            AND c.`Employee Number` <> 'EMP-000922'
             AND (
               UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) IN ('AUDIO PRODUCER','UX DESIGNER','USER EXPERIENCE DESIGNER')
               OR UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) IN ('SENIOR AUDIO PRODUCER','SENIOR UX DESIGNER','SENIOR USER EXPERIENCE RESEARCHER')
