@@ -79,7 +79,7 @@ FROM (
         CASE
           WHEN UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) IN ('AUDIO PRODUCER','UX DESIGNER','USER EXPERIENCE DESIGNER') THEN 'STAFF_AP_UX'
           WHEN UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) IN ('SENIOR AUDIO PRODUCER','SENIOR UX DESIGNER','SENIOR USER EXPERIENCE RESEARCHER') THEN 'SENIOR_AP_UX'
-          WHEN UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) IN ('CREATIVE SYSTEMS TECHNOLOGY DIRECTOR','CREATIVE TECHNOLOGY DIRECTOR','USER EXPERIENCE DIRECTOR') THEN 'DIR_TECH_UX'
+          WHEN UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) IN ('CREATIVE SYSTEMS TECHNOLOGY DIRECTOR','CREATIVE TECHNOLOGY DIRECTOR','USER EXPERIENCE DIRECTOR','MANAGING TECHNOLOGY DIRECTOR') THEN 'DIR_TECH_UX'
           ELSE NULL
         END AS role_key
       FROM (
@@ -147,8 +147,8 @@ FROM (
         FROM `namely_title_history_data_aq`
         WHERE `Title` IS NOT NULL
       ) AS fbtit ON fbtit.`Employee Number` = c.`Employee Number` AND fbtit.title_change_date = fb.fb_date
-      WHERE TRIM(c.`Department`) IN ('Studio','Tech')
-        AND UPPER(TRIM(c.`Department`)) <> 'PRODUCTION'
+      WHERE (TRIM(c.`Department`) IN ('Studio','Tech') OR c.`Department` IS NULL OR TRIM(c.`Department`) = '')
+        AND (c.`Department` IS NULL OR UPPER(TRIM(c.`Department`)) <> 'PRODUCTION')
         AND UPPER(TRIM(c.`Employee Type`)) = 'STAFF FULL TIME'
         AND UPPER(TRIM(c.`Type`)) IN ('YEARLY','SALARY','SALARIED','ANNUAL')
         AND c.`Salary` IS NOT NULL
@@ -167,7 +167,7 @@ FROM (
         CASE
           WHEN UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) IN ('AUDIO PRODUCER','UX DESIGNER','USER EXPERIENCE DESIGNER') THEN 'STAFF_AP_UX'
           WHEN UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) IN ('SENIOR AUDIO PRODUCER','SENIOR UX DESIGNER','SENIOR USER EXPERIENCE RESEARCHER') THEN 'SENIOR_AP_UX'
-          WHEN UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) IN ('CREATIVE SYSTEMS TECHNOLOGY DIRECTOR','CREATIVE TECHNOLOGY DIRECTOR','USER EXPERIENCE DIRECTOR') THEN 'DIR_TECH_UX'
+          WHEN UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) IN ('CREATIVE SYSTEMS TECHNOLOGY DIRECTOR','CREATIVE TECHNOLOGY DIRECTOR','USER EXPERIENCE DIRECTOR','MANAGING TECHNOLOGY DIRECTOR') THEN 'DIR_TECH_UX'
           ELSE NULL
         END AS role_key,
         CAST(REPLACE(REPLACE(c.`Salary`, '$',''), ',', '') AS DECIMAL(12,2)) AS salary_usd
@@ -236,8 +236,8 @@ FROM (
         FROM `namely_title_history_data_aq`
         WHERE `Title` IS NOT NULL
       ) AS fbtit ON fbtit.`Employee Number` = c.`Employee Number` AND fbtit.title_change_date = fb.fb_date
-      WHERE TRIM(c.`Department`) IN ('Studio','Tech')
-        AND UPPER(TRIM(c.`Department`)) <> 'PRODUCTION'
+      WHERE (TRIM(c.`Department`) IN ('Studio','Tech') OR c.`Department` IS NULL OR TRIM(c.`Department`) = '')
+        AND (c.`Department` IS NULL OR UPPER(TRIM(c.`Department`)) <> 'PRODUCTION')
         AND UPPER(TRIM(c.`Employee Type`)) = 'STAFF FULL TIME'
         AND UPPER(TRIM(c.`Type`)) IN ('YEARLY','SALARY','SALARIED','ANNUAL')
         AND c.`Salary` IS NOT NULL
@@ -336,8 +336,8 @@ FROM (
             FROM `namely_title_history_data_aq`
             WHERE `Title` IS NOT NULL
           ) AS fbtit ON fbtit.`Employee Number` = c.`Employee Number` AND fbtit.title_change_date = fb.fb_date
-          WHERE TRIM(c.`Department`) IN ('Studio','Tech')
-            AND UPPER(TRIM(c.`Department`)) <> 'PRODUCTION'
+          WHERE (TRIM(c.`Department`) IN ('Studio','Tech') OR c.`Department` IS NULL OR TRIM(c.`Department`) = '')
+            AND (c.`Department` IS NULL OR UPPER(TRIM(c.`Department`)) <> 'PRODUCTION')
             AND UPPER(TRIM(c.`Employee Type`)) = 'STAFF FULL TIME'
             AND UPPER(TRIM(c.`Type`)) IN ('YEARLY','SALARY','SALARIED','ANNUAL')
             AND c.`Salary` IS NOT NULL
@@ -347,7 +347,7 @@ FROM (
             AND (
               UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) IN ('AUDIO PRODUCER','UX DESIGNER','USER EXPERIENCE DESIGNER')
               OR UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) IN ('SENIOR AUDIO PRODUCER','SENIOR UX DESIGNER','SENIOR USER EXPERIENCE RESEARCHER')
-              OR UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) IN ('CREATIVE SYSTEMS TECHNOLOGY DIRECTOR','CREATIVE TECHNOLOGY DIRECTOR','USER EXPERIENCE DIRECTOR')
+              OR UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) IN ('CREATIVE SYSTEMS TECHNOLOGY DIRECTOR','CREATIVE TECHNOLOGY DIRECTOR','USER EXPERIENCE DIRECTOR','MANAGING TECHNOLOGY DIRECTOR')
             )
         ) AS base
         ORDER BY base.role_key ASC, base.salary_usd ASC
@@ -438,8 +438,8 @@ FROM (
             FROM `namely_title_history_data_aq`
             WHERE `Title` IS NOT NULL
           ) AS fbtit ON fbtit.`Employee Number` = c.`Employee Number` AND fbtit.title_change_date = fb.fb_date
-          WHERE TRIM(c.`Department`) IN ('Studio','Tech')
-            AND UPPER(TRIM(c.`Department`)) <> 'PRODUCTION'
+          WHERE (TRIM(c.`Department`) IN ('Studio','Tech') OR c.`Department` IS NULL OR TRIM(c.`Department`) = '')
+            AND (c.`Department` IS NULL OR UPPER(TRIM(c.`Department`)) <> 'PRODUCTION')
             AND UPPER(TRIM(c.`Employee Type`)) = 'STAFF FULL TIME'
             AND UPPER(TRIM(c.`Type`)) IN ('YEARLY','SALARY','SALARIED','ANNUAL')
             AND c.`Salary` IS NOT NULL
@@ -449,7 +449,7 @@ FROM (
             AND (
               UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) IN ('AUDIO PRODUCER','UX DESIGNER','USER EXPERIENCE DESIGNER')
               OR UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) IN ('SENIOR AUDIO PRODUCER','SENIOR UX DESIGNER','SENIOR USER EXPERIENCE RESEARCHER')
-              OR UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) IN ('CREATIVE SYSTEMS TECHNOLOGY DIRECTOR','CREATIVE TECHNOLOGY DIRECTOR','USER EXPERIENCE DIRECTOR')
+              OR UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) IN ('CREATIVE SYSTEMS TECHNOLOGY DIRECTOR','CREATIVE TECHNOLOGY DIRECTOR','USER EXPERIENCE DIRECTOR','MANAGING TECHNOLOGY DIRECTOR')
             )
         ) AS base
         ORDER BY base.role_key ASC, base.salary_usd ASC
@@ -540,8 +540,8 @@ FROM (
             FROM `namely_title_history_data_aq`
             WHERE `Title` IS NOT NULL
           ) AS fbtit ON fbtit.`Employee Number` = c.`Employee Number` AND fbtit.title_change_date = fb.fb_date
-          WHERE TRIM(c.`Department`) IN ('Studio','Tech')
-            AND UPPER(TRIM(c.`Department`)) <> 'PRODUCTION'
+          WHERE (TRIM(c.`Department`) IN ('Studio','Tech') OR c.`Department` IS NULL OR TRIM(c.`Department`) = '')
+            AND (c.`Department` IS NULL OR UPPER(TRIM(c.`Department`)) <> 'PRODUCTION')
             AND UPPER(TRIM(c.`Employee Type`)) = 'STAFF FULL TIME'
             AND UPPER(TRIM(c.`Type`)) IN ('YEARLY','SALARY','SALARIED','ANNUAL')
             AND c.`Salary` IS NOT NULL
@@ -551,7 +551,7 @@ FROM (
             AND (
               UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) IN ('AUDIO PRODUCER','UX DESIGNER','USER EXPERIENCE DESIGNER')
               OR UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) IN ('SENIOR AUDIO PRODUCER','SENIOR UX DESIGNER','SENIOR USER EXPERIENCE RESEARCHER')
-              OR UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) IN ('CREATIVE SYSTEMS TECHNOLOGY DIRECTOR','CREATIVE TECHNOLOGY DIRECTOR','USER EXPERIENCE DIRECTOR')
+              OR UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) IN ('CREATIVE SYSTEMS TECHNOLOGY DIRECTOR','CREATIVE TECHNOLOGY DIRECTOR','USER EXPERIENCE DIRECTOR','MANAGING TECHNOLOGY DIRECTOR')
             )
         ) AS base
         ORDER BY base.role_key ASC, base.salary_usd ASC
