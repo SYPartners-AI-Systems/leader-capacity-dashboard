@@ -1,103 +1,154 @@
 Comp Group,Department,Roles/ Titles,Level,Step,Annual Salary USD,Comp Band Start Date,Comp Band End Date
-Core Consulting,Design,Design Associate,Associate,Step 1,70000,2/1/22,6/30/25
-Core Consulting,Program Management,Program Coordinator,Associate,Step 1,70000,2/1/22,6/30/25
-Core Consulting,Design,Design Associate,Associate,Step 2,80000,2/1/22,6/30/25
-Core Consulting,Program Management,Program Coordinator,Associate,Step 2,80000,2/1/22,6/30/25
-Core Consulting,Strategy,"Strategist, Associate Strategist,Strategy Associate",Staff,Step 1,90000,2/1/22,6/30/25
-Core Consulting,Design,Designer,Staff,Step 1,90000,2/1/22,6/30/25
-Core Consulting,Program Management,Program Manager,Staff,Step 1,90000,2/1/22,6/30/25
-Core Consulting,"Tech, Studio, Studio Tech/UX","Audio Producer,UX Designer",Staff,Step 1,90000,2/1/22,6/30/25
-Core Consulting,Strategy,"Strategist, Associate Strategist,Strategy Associate",Staff,Step 2,110000,2/1/22,6/30/25
-Core Consulting,Design,Designer,Staff,Step 2,110000,2/1/22,6/30/25
-Core Consulting,Program Management,Program Manager,Staff,Step 2,110000,2/1/22,6/30/25
-Core Consulting,"Tech, Studio, Studio Tech/UX","Audio Producer,UX Designer",Staff,Step 2,110000,2/1/22,6/30/25
-Core Consulting,Strategy,Senior Strategist,Senior,Step 1,120000,2/1/22,6/30/25
-Core Consulting,Design,Senior Designer,Senior,Step 1,120000,2/1/22,6/30/25
-Core Consulting,Program Management,Senior Program Manager,Senior,Step 1,120000,2/1/22,6/30/25
-Core Consulting,"Tech, Studio, Studio Tech/UX","Senior Audio Producer,Senior UX Designer,Senior User Experience Researcher",Senior,Step 1,120000,2/1/22,6/30/25
-Core Consulting,Strategy,Senior Strategist,Senior,Step 2,140000,2/1/22,6/30/25
-Core Consulting,Design,Senior Designer,Senior,Step 2,140000,2/1/22,6/30/25
-Core Consulting,Program Management,Senior Program Manager,Senior,Step 2,140000,2/1/22,6/30/25
-Core Consulting,"Tech, Studio, Studio Tech/UX","Senior Audio Producer,Senior UX Designer,Senior User Experience Researcher",Senior,Step 2,140000,2/1/22,6/30/25
-Core Consulting,Strategy,"Strategy Director,""Strategy Director, Market Growth, Middle East"",""Strategy Director, UAE""",Director,Step 1,155000,2/1/22,6/30/25
-Core Consulting,Design,Creative Director,Director,Step 1,155000,2/1/22,6/30/25
-Core Consulting,Program Management,"Program Director,Program Director & Head of Program Management",Director,Step 1,155000,2/1/22,6/30/25
-Core Consulting,"Tech, Studio, Studio Tech/UX","Creative Systems Technology Director,Creative Technology Director,User Experience Director",Director,Step 1,155000,2/1/22,6/30/25
-Core Consulting,Strategy,"Strategy Director,""Strategy Director, Market Growth, Middle East"",""Strategy Director, UAE""",Director,Step 2,170000,2/1/22,6/30/25
-Core Consulting,Design,Creative Director,Director,Step 2,170000,2/1/22,6/30/25
-Core Consulting,Program Management,"Program Director,Program Director & Head of Program Management",Director,Step 2,170000,2/1/22,6/30/25
-Core Consulting,"Tech, Studio, Studio Tech/UX","Creative Systems Technology Director,Creative Technology Director,User Experience Director",Director,Step 2,170000,2/1/22,6/30/25
-Core Consulting,Strategy,"Strategy Director,""Strategy Director, Market Growth, Middle East"",""Strategy Director, UAE""",Director,Step 3,185000,2/1/22,6/30/25
-Core Consulting,Design,Creative Director,Director,Step 3,185000,2/1/22,6/30/25
-Core Consulting,Program Management,"Program Director,Program Director & Head of Program Management",Director,Step 3,185000,2/1/22,6/30/25
-Core Consulting,"Tech, Studio, Studio Tech/UX","Creative Systems Technology Director,Creative Technology Director,User Experience Director",Director,Step 3,185000,2/1/22,6/30/25
-Core Consulting,Principals,"Principal,""Principal & Head of Design Team"",""Principal, Design"",""Principal, Head of Strategy/VP, People Strategy and Consulting Enablement"",""Principal, Program Management"",""Principal, Strategy"",""VP, Business Operations & Head of Program Management Team""",Principal/VP,Step 1,205000,2/1/22,6/30/25
-Core Consulting,Principals,"Principal,""Principal & Head of Design Team"",""Principal, Design"",""Principal, Head of Strategy/VP, People Strategy and Consulting Enablement"",""Principal, Program Management"",""Principal, Strategy"",""VP, Business Operations & Head of Program Management Team""",Principal/VP,Step 2,225000,2/1/22,6/30/25
-Core Consulting,Principals,"Principal,""Principal & Head of Design Team"",""Principal, Design"",""Principal, Head of Strategy/VP, People Strategy and Consulting Enablement"",""Principal, Program Management"",""Principal, Strategy"",""VP, Business Operations & Head of Program Management Team""",Principal/VP,Step 3,250000,2/1/22,6/30/25
+Core Consulting,Design,Design Associate,Associate,Step 1,85000,2025-07-01,
+Core Consulting,Design,Design Associate,Associate,Step 2,90000,2025-07-01,
+Core Consulting,Design,Designer,Staff,Step 1,100000,2025-07-01,
+Core Consulting,Design,Designer,Staff,Step 2,112000,2025-07-01,
+Core Consulting,Design,Senior Designer,Senior,Step 1,125000,2025-07-01,
+Core Consulting,Design,Senior Designer,Senior,Step 2,142000,2025-07-01,
+Core Consulting,Design,Creative Director,Director,Step 1,160000,2025-07-01,
+Core Consulting,Design,Creative Director,Director,Step 2,180000,2025-07-01,
+Core Consulting,Design,Creative Director,Director,Step 3,190000,2025-07-01,
+Core Consulting,Design,Design Associate,Associate,Step 1,70000,2022-02-01,2025-06-30
+Core Consulting,Design,Design Associate,Associate,Step 2,80000,2022-02-01,2025-06-30
+Core Consulting,Design,Designer,Staff,Step 1,90000,2022-02-01,2025-06-30
+Core Consulting,Design,Designer,Staff,Step 2,110000,2022-02-01,2025-06-30
+Core Consulting,Design,Senior Designer,Senior,Step 1,120000,2022-02-01,2025-06-30
+Core Consulting,Design,Senior Designer,Senior,Step 2,140000,2022-02-01,2025-06-30
+Core Consulting,Design,Creative Director,Director,Step 1,155000,2022-02-01,2025-06-30
+Core Consulting,Design,Creative Director,Director,Step 2,170000,2022-02-01,2025-06-30
+Core Consulting,Design,Creative Director,Director,Step 3,185000,2022-02-01,2025-06-30
+Core Consulting,Design,Design Associate,Associate,Step 1,,2016-01-01,2022-01-31
+Core Consulting,Design,Design Associate,Associate,Step 2,,2016-01-01,2022-01-31
+Core Consulting,Design,Designer,Staff,Step 1,,2016-01-01,2022-01-31
+Core Consulting,Design,Designer,Staff,Step 2,,2016-01-01,2022-01-31
+Core Consulting,Design,Senior Designer,Senior,Step 1,,2016-01-01,2022-01-31
+Core Consulting,Design,Senior Designer,Senior,Step 2,,2016-01-01,2022-01-31
+Core Consulting,Design,Creative Director,Director,Step 1,,2016-01-01,2022-01-31
+Core Consulting,Design,Creative Director,Director,Step 2,,2016-01-01,2022-01-31
+Core Consulting,Design,Creative Director,Director,Step 3,,2016-01-01,2022-01-31
 Core Consulting,Partners,"Partner,""
-Partner, User Experience"",""Partner & Head of Strategy Team""",Partner/SVP,Step 1,250000,2/1/22,6/30/25
+Partner, User Experience"",""Partner & Head of Strategy Team""",Partner/SVP,Step 1,250000,2022-02-01,2025-06-30
 Core Consulting,Partners,"Partner,""
-Partner, User Experience"",""Partner & Head of Strategy Team""",Partner/SVP,Step 2,275000,2/1/22,6/30/25
+Partner, User Experience"",""Partner & Head of Strategy Team""",Partner/SVP,Step 2,275000,2022-02-01,2025-06-30
 Core Consulting,Partners,"Partner,""
-Partner, User Experience"",""Partner & Head of Strategy Team""",Partner/SVP,Step 3,300000,2/1/22,6/30/25
-Core Consulting,Partners,Senior Partner,Executive,Step 1,350000,2/1/22,6/30/25
-Specialist Consulting,"Production,Studio,Studio Design",Production Design Associate,Associate,Step 1,60000,2/1/22,6/30/25
-Specialist Consulting,"Production,Studio,Studio Design",Production Design Associate,Associate,Step 2,70000,2/1/22,6/30/25
-Specialist Consulting,"Production,Studio,Studio Design","Studio Designer,Production Designer,Studio Manager",Staff,Step 1,80000,2/1/22,6/30/25
-Specialist Consulting,"Production,Studio,Studio Design","Studio Designer,Production Designer,Studio Manager",Staff,Step 2,90000,2/1/22,6/30/25
-Specialist Consulting,"Production,Studio,Studio Design","Senior Studio Designer,Senior Production Designer,Senior Studio Manager",Senior,Step 1,100000,2/1/22,6/30/25
-Specialist Consulting,"Production,Studio,Studio Design","Senior Studio Designer,Senior Production Designer,Senior Studio Manager",Senior,Step 2,120000,2/1/22,6/30/25
-Specialist Consulting,"Production,Studio,Studio Design","Studio Design Director,Production Design Director",Director,Step 1,140000,2/1/22,6/30/25
-Specialist Consulting,"Production,Studio,Studio Design","Studio Design Director,Production Design Director",Director,Step 2,155000,2/1/22,6/30/25
-Specialist Consulting,"Production,Studio,Studio Design","Studio Design Director,Production Design Director",Director,Step 3,170000,2/1/22,6/30/25
-Core Consulting,Design,Design Associate,Associate,Step 1,85000,7/1/25,
-Core Consulting,Program Management,Program Coordinator,Associate,Step 1,85000,7/1/25,
-Core Consulting,Design,Design Associate,Associate,Step 2,90000,7/1/25,
-Core Consulting,Program Management,Program Coordinator,Associate,Step 2,90000,7/1/25,
-Core Consulting,Strategy,"Strategist, Associate Strategist,Strategy Associate",Staff,Step 1,100000,7/1/25,
-Core Consulting,Design,Designer,Staff,Step 1,100000,7/1/25,
-Core Consulting,Program Management,Program Manager,Staff,Step 1,100000,7/1/25,
-Core Consulting,"Tech, Studio, Studio Tech/UX","Audio Producer,UX Designer",Staff,Step 1,100000,7/1/25,
-Core Consulting,Strategy,"Strategist, Associate Strategist,Strategy Associate",Staff,Step 2,112000,7/1/25,
-Core Consulting,Design,Designer,Staff,Step 2,112000,7/1/25,
-Core Consulting,Program Management,Program Manager,Staff,Step 2,112000,7/1/25,
-Core Consulting,"Tech, Studio, Studio Tech/UX","Audio Producer,UX Designer",Staff,Step 2,112000,7/1/25,
-Core Consulting,Strategy,Senior Strategist,Senior,Step 1,125000,7/1/25,
-Core Consulting,Design,Senior Designer,Senior,Step 1,125000,7/1/25,
-Core Consulting,Program Management,Senior Program Manager,Senior,Step 1,125000,7/1/25,
-Core Consulting,"Tech, Studio, Studio Tech/UX","Senior Audio Producer,Senior UX Designer,Senior User Experience Researcher",Senior,Step 1,125000,7/1/25,
-Core Consulting,Strategy,Senior Strategist,Senior,Step 2,142000,7/1/25,
-Core Consulting,Design,Senior Designer,Senior,Step 2,142000,7/1/25,
-Core Consulting,Program Management,Senior Program Manager,Senior,Step 2,142000,7/1/25,
-Core Consulting,"Tech, Studio, Studio Tech/UX","Senior Audio Producer,Senior UX Designer,Senior User Experience Researcher",Senior,Step 2,142000,7/1/25,
-Core Consulting,Strategy,"Strategy Director,""Strategy Director, Market Growth, Middle East"",""Strategy Director, UAE""",Director,Step 1,160000,7/1/25,
-Core Consulting,Design,Creative Director,Director,Step 1,160000,7/1/25,
-Core Consulting,Program Management,"Program Director,Program Director & Head of Program Management",Director,Step 1,160000,7/1/25,
-Core Consulting,"Tech, Studio, Studio Tech/UX","Creative Systems Technology Director,Creative Technology Director,User Experience Director",Director,Step 1,160000,7/1/25,
-Core Consulting,Strategy,"Strategy Director,""Strategy Director, Market Growth, Middle East"",""Strategy Director, UAE""",Director,Step 2,180000,7/1/25,
-Core Consulting,Design,Creative Director,Director,Step 2,180000,7/1/25,
-Core Consulting,Program Management,"Program Director,Program Director & Head of Program Management",Director,Step 2,180000,7/1/25,
-Core Consulting,"Tech, Studio, Studio Tech/UX","Creative Systems Technology Director,Creative Technology Director,User Experience Director",Director,Step 2,180000,7/1/25,
-Core Consulting,Strategy,"Strategy Director,""Strategy Director, Market Growth, Middle East"",""Strategy Director, UAE""",Director,Step 3,190000,7/1/25,
-Core Consulting,Design,Creative Director,Director,Step 3,190000,7/1/25,
-Core Consulting,Program Management,"Program Director,Program Director & Head of Program Management",Director,Step 3,190000,7/1/25,
-Core Consulting,"Tech, Studio, Studio Tech/UX","Creative Systems Technology Director,Creative Technology Director,User Experience Director",Director,Step 3,190000,7/1/25,
-Core Consulting,Principals,"Principal,""Principal & Head of Design Team"",""Principal, Design"",""Principal, Head of Strategy/VP, People Strategy and Consulting Enablement"",""Principal, Program Management"",""Principal, Strategy"",""VP, Business Operations & Head of Program Management Team""",Principal/VP,Step 1,205000,7/1/25,
-Core Consulting,Principals,"Principal,""Principal & Head of Design Team"",""Principal, Design"",""Principal, Head of Strategy/VP, People Strategy and Consulting Enablement"",""Principal, Program Management"",""Principal, Strategy"",""VP, Business Operations & Head of Program Management Team""",Principal/VP,Step 2,225000,7/1/25,
-Core Consulting,Principals,"Principal,""Principal & Head of Design Team"",""Principal, Design"",""Principal, Head of Strategy/VP, People Strategy and Consulting Enablement"",""Principal, Program Management"",""Principal, Strategy"",""VP, Business Operations & Head of Program Management Team""",Principal/VP,Step 3,250000,7/1/25,
+Partner, User Experience"",""Partner & Head of Strategy Team""",Partner/SVP,Step 3,300000,2022-02-01,2025-06-30
+Core Consulting,Partners,Senior Partner,Executive,Step 1,350000,2022-02-01,2025-06-30
+Core Consulting,Principals,"Principal,""Principal & Head of Design Team"",""Principal, Design"",""Principal, Head of Strategy/VP, People Strategy and Consulting Enablement"",""Principal, Program Management"",""Principal, Strategy"",""VP, Business Operations & Head of Program Management Team""",Principal/VP,Step 1,205000,2022-02-01,2025-06-30
+Core Consulting,Principals,"Principal,""Principal & Head of Design Team"",""Principal, Design"",""Principal, Head of Strategy/VP, People Strategy and Consulting Enablement"",""Principal, Program Management"",""Principal, Strategy"",""VP, Business Operations & Head of Program Management Team""",Principal/VP,Step 2,225000,2022-02-01,2025-06-30
+Core Consulting,Principals,"Principal,""Principal & Head of Design Team"",""Principal, Design"",""Principal, Head of Strategy/VP, People Strategy and Consulting Enablement"",""Principal, Program Management"",""Principal, Strategy"",""VP, Business Operations & Head of Program Management Team""",Principal/VP,Step 3,250000,2022-02-01,2025-06-30
 Core Consulting,Partners,"Partner,""
-Partner, User Experience"",""Partner & Head of Strategy Team""",Partner/SVP,Step 1,250000,7/1/25,
+Partner, User Experience"",""Partner & Head of Strategy Team""",Partner/SVP,Step 1,250000,2025-07-01,
 Core Consulting,Partners,"Partner,""
-Partner, User Experience"",""Partner & Head of Strategy Team""",Partner/SVP,Step 2,275000,7/1/25,
+Partner, User Experience"",""Partner & Head of Strategy Team""",Partner/SVP,Step 1,,2016-01-01,2022-01-31
 Core Consulting,Partners,"Partner,""
-Partner, User Experience"",""Partner & Head of Strategy Team""",Partner/SVP,Step 3,300000,7/1/25,
-Core Consulting,Partners,Senior Partner,Executive,Step 1,350000,7/1/25,
-Specialist Consulting,"Production,Studio,Studio Design",Production Design Associate,Associate,Step 1,70000,7/1/25,
-Specialist Consulting,"Production,Studio,Studio Design",Production Design Associate,Associate,Step 2,75000,7/1/25,
-Specialist Consulting,"Production,Studio,Studio Design","Studio Designer,Production Designer,Studio Manager",Staff,Step 1,80000,7/1/25,
-Specialist Consulting,"Production,Studio,Studio Design","Studio Designer,Production Designer,Studio Manager",Staff,Step 2,90000,7/1/25,
-Specialist Consulting,"Production,Studio,Studio Design","Senior Studio Designer,Senior Production Designer,Senior Studio Manager",Senior,Step 1,105000,7/1/25,
-Specialist Consulting,"Production,Studio,Studio Design","Senior Studio Designer,Senior Production Designer,Senior Studio Manager",Senior,Step 2,120000,7/1/25,
-Specialist Consulting,"Production,Studio,Studio Design","Studio Design Director,Production Design Director",Director,Step 1,145000,7/1/25,
-Specialist Consulting,"Production,Studio,Studio Design","Studio Design Director,Production Design Director",Director,Step 2,160000,7/1/25,
-Specialist Consulting,"Production,Studio,Studio Design","Studio Design Director,Production Design Director",Director,Step 3,175000,7/1/25,
+Partner, User Experience"",""Partner & Head of Strategy Team""",Partner/SVP,Step 2,,2016-01-01,2022-01-31
+Core Consulting,Partners,"Partner,""
+Partner, User Experience"",""Partner & Head of Strategy Team""",Partner/SVP,Step 3,,2016-01-01,2022-01-31
+Core Consulting,Partners,Senior Partner,Executive,Step 1,,2016-01-01,2022-01-31
+Core Consulting,Partners,"Partner,""
+Partner, User Experience"",""Partner & Head of Strategy Team""",Partner/SVP,Step 2,275000,2025-07-01,
+Core Consulting,Partners,"Partner,""
+Partner, User Experience"",""Partner & Head of Strategy Team""",Partner/SVP,Step 3,300000,2025-07-01,
+Core Consulting,Partners,Senior Partner,Executive,Step 1,350000,2025-07-01,
+Core Consulting,Principals,"Principal,""Principal & Head of Design Team"",""Principal, Design"",""Principal, Head of Strategy/VP, People Strategy and Consulting Enablement"",""Principal, Program Management"",""Principal, Strategy"",""VP, Business Operations & Head of Program Management Team""",Principal/VP,Step 1,205000,2025-07-01,
+Core Consulting,Principals,"Principal,""Principal & Head of Design Team"",""Principal, Design"",""Principal, Head of Strategy/VP, People Strategy and Consulting Enablement"",""Principal, Program Management"",""Principal, Strategy"",""VP, Business Operations & Head of Program Management Team""",Principal/VP,Step 2,225000,2025-07-01,
+Core Consulting,Principals,"Principal,""Principal & Head of Design Team"",""Principal, Design"",""Principal, Head of Strategy/VP, People Strategy and Consulting Enablement"",""Principal, Program Management"",""Principal, Strategy"",""VP, Business Operations & Head of Program Management Team""",Principal/VP,Step 3,250000,2025-07-01,
+Core Consulting,Principals,"Principal,""Principal & Head of Design Team"",""Principal, Design"",""Principal, Head of Strategy/VP, People Strategy and Consulting Enablement"",""Principal, Program Management"",""Principal, Strategy"",""VP, Business Operations & Head of Program Management Team""",Principal/VP,Step 1,,2016-01-01,2022-01-31
+Core Consulting,Principals,"Principal,""Principal & Head of Design Team"",""Principal, Design"",""Principal, Head of Strategy/VP, People Strategy and Consulting Enablement"",""Principal, Program Management"",""Principal, Strategy"",""VP, Business Operations & Head of Program Management Team""",Principal/VP,Step 2,,2016-01-01,2022-01-31
+Core Consulting,Principals,"Principal,""Principal & Head of Design Team"",""Principal, Design"",""Principal, Head of Strategy/VP, People Strategy and Consulting Enablement"",""Principal, Program Management"",""Principal, Strategy"",""VP, Business Operations & Head of Program Management Team""",Principal/VP,Step 3,,2016-01-01,2022-01-31
+Specialist Consulting,"Production,Studio,Studio Design",Production Design Associate,Associate,Step 1,70000,2025-07-01,
+Specialist Consulting,"Production,Studio,Studio Design",Production Design Associate,Associate,Step 2,75000,2025-07-01,
+Specialist Consulting,"Production,Studio,Studio Design","Studio Designer,Production Designer,Studio Manager",Staff,Step 1,80000,2025-07-01,
+Specialist Consulting,"Production,Studio,Studio Design","Studio Designer,Production Designer,Studio Manager",Staff,Step 2,90000,2025-07-01,
+Specialist Consulting,"Production,Studio,Studio Design","Senior Studio Designer,Senior Production Designer,Senior Studio Manager",Senior,Step 1,105000,2025-07-01,
+Specialist Consulting,"Production,Studio,Studio Design","Senior Studio Designer,Senior Production Designer,Senior Studio Manager",Senior,Step 2,120000,2025-07-01,
+Specialist Consulting,"Production,Studio,Studio Design","Studio Design Director,Production Design Director",Director,Step 1,145000,2025-07-01,
+Specialist Consulting,"Production,Studio,Studio Design","Studio Design Director,Production Design Director",Director,Step 2,160000,2025-07-01,
+Specialist Consulting,"Production,Studio,Studio Design","Studio Design Director,Production Design Director",Director,Step 3,175000,2025-07-01,
+Specialist Consulting,"Production,Studio,Studio Design",Production Design Associate,Associate,Step 1,60000,2022-02-01,2025-06-30
+Specialist Consulting,"Production,Studio,Studio Design",Production Design Associate,Associate,Step 2,70000,2022-02-01,2025-06-30
+Specialist Consulting,"Production,Studio,Studio Design","Studio Designer,Production Designer,Studio Manager",Staff,Step 1,80000,2022-02-01,2025-06-30
+Specialist Consulting,"Production,Studio,Studio Design","Studio Designer,Production Designer,Studio Manager",Staff,Step 2,90000,2022-02-01,2025-06-30
+Specialist Consulting,"Production,Studio,Studio Design","Senior Studio Designer,Senior Production Designer,Senior Studio Manager",Senior,Step 1,100000,2022-02-01,2025-06-30
+Specialist Consulting,"Production,Studio,Studio Design","Senior Studio Designer,Senior Production Designer,Senior Studio Manager",Senior,Step 2,120000,2022-02-01,2025-06-30
+Specialist Consulting,"Production,Studio,Studio Design","Studio Design Director,Production Design Director",Director,Step 1,140000,2022-02-01,2025-06-30
+Specialist Consulting,"Production,Studio,Studio Design","Studio Design Director,Production Design Director",Director,Step 2,155000,2022-02-01,2025-06-30
+Specialist Consulting,"Production,Studio,Studio Design","Studio Design Director,Production Design Director",Director,Step 3,170000,2022-02-01,2025-06-30
+Specialist Consulting,"Production,Studio,Studio Design",Production Design Associate,Associate,Step 1,,2016-01-01,2022-01-31
+Specialist Consulting,"Production,Studio,Studio Design",Production Design Associate,Associate,Step 2,,2016-01-01,2022-01-31
+Specialist Consulting,"Production,Studio,Studio Design","Studio Designer,Production Designer,Studio Manager",Staff,Step 1,,2016-01-01,2022-01-31
+Specialist Consulting,"Production,Studio,Studio Design","Studio Designer,Production Designer,Studio Manager",Staff,Step 2,,2016-01-01,2022-01-31
+Specialist Consulting,"Production,Studio,Studio Design","Senior Studio Designer,Senior Production Designer,Senior Studio Manager",Senior,Step 1,,2016-01-01,2022-01-31
+Specialist Consulting,"Production,Studio,Studio Design","Senior Studio Designer,Senior Production Designer,Senior Studio Manager",Senior,Step 2,,2016-01-01,2022-01-31
+Specialist Consulting,"Production,Studio,Studio Design","Studio Design Director,Production Design Director",Director,Step 1,,2016-01-01,2022-01-31
+Specialist Consulting,"Production,Studio,Studio Design","Studio Design Director,Production Design Director",Director,Step 2,,2016-01-01,2022-01-31
+Specialist Consulting,"Production,Studio,Studio Design","Studio Design Director,Production Design Director",Director,Step 3,,2016-01-01,2022-01-31
+Core Consulting,Program Management,Program Coordinator,Associate,Step 1,85000,2025-07-01,
+Core Consulting,Program Management,Program Coordinator,Associate,Step 2,90000,2025-07-01,
+Core Consulting,Program Management,Program Manager,Staff,Step 1,100000,2025-07-01,
+Core Consulting,Program Management,Program Manager,Staff,Step 2,112000,2025-07-01,
+Core Consulting,Program Management,Senior Program Manager,Senior,Step 1,125000,2025-07-01,
+Core Consulting,Program Management,Senior Program Manager,Senior,Step 2,142000,2025-07-01,
+Core Consulting,Program Management,"Program Director,Program Director & Head of Program Management",Director,Step 1,160000,2025-07-01,
+Core Consulting,Program Management,"Program Director,Program Director & Head of Program Management",Director,Step 2,180000,2025-07-01,
+Core Consulting,Program Management,"Program Director,Program Director & Head of Program Management",Director,Step 3,190000,2025-07-01,
+Core Consulting,Program Management,Program Coordinator,Associate,Step 1,70000,2022-02-01,2025-06-30
+Core Consulting,Program Management,Program Coordinator,Associate,Step 2,80000,2022-02-01,2025-06-30
+Core Consulting,Program Management,Program Manager,Staff,Step 1,90000,2022-02-01,2025-06-30
+Core Consulting,Program Management,Program Manager,Staff,Step 2,110000,2022-02-01,2025-06-30
+Core Consulting,Program Management,Senior Program Manager,Senior,Step 1,120000,2022-02-01,2025-06-30
+Core Consulting,Program Management,Senior Program Manager,Senior,Step 2,140000,2022-02-01,2025-06-30
+Core Consulting,Program Management,"Program Director,Program Director & Head of Program Management",Director,Step 1,155000,2022-02-01,2025-06-30
+Core Consulting,Program Management,"Program Director,Program Director & Head of Program Management",Director,Step 2,170000,2022-02-01,2025-06-30
+Core Consulting,Program Management,"Program Director,Program Director & Head of Program Management",Director,Step 3,185000,2022-02-01,2025-06-30
+Core Consulting,Program Management,Program Coordinator,Associate,Step 1,,2016-01-01,2022-01-31
+Core Consulting,Program Management,Program Coordinator,Associate,Step 2,,2016-01-01,2022-01-31
+Core Consulting,Program Management,Program Manager,Staff,Step 1,,2016-01-01,2022-01-31
+Core Consulting,Program Management,Program Manager,Staff,Step 2,,2016-01-01,2022-01-31
+Core Consulting,Program Management,Senior Program Manager,Senior,Step 1,,2016-01-01,2022-01-31
+Core Consulting,Program Management,Senior Program Manager,Senior,Step 2,,2016-01-01,2022-01-31
+Core Consulting,Program Management,"Program Director,Program Director & Head of Program Management",Director,Step 1,,2016-01-01,2022-01-31
+Core Consulting,Program Management,"Program Director,Program Director & Head of Program Management",Director,Step 2,,2016-01-01,2022-01-31
+Core Consulting,Program Management,"Program Director,Program Director & Head of Program Management",Director,Step 3,,2016-01-01,2022-01-31
+Core Consulting,Strategy,"Strategist, Associate Strategist,Strategy Associate",Staff,Step 1,100000,2025-07-01,
+Core Consulting,Strategy,"Strategist, Associate Strategist,Strategy Associate",Staff,Step 2,112000,2025-07-01,
+Core Consulting,Strategy,Senior Strategist,Senior,Step 1,125000,2025-07-01,
+Core Consulting,Strategy,Senior Strategist,Senior,Step 2,142000,2025-07-01,
+Core Consulting,Strategy,"Strategy Director,""Strategy Director, Market Growth, Middle East"",""Strategy Director, UAE""",Director,Step 1,160000,2025-07-01,
+Core Consulting,Strategy,"Strategy Director,""Strategy Director, Market Growth, Middle East"",""Strategy Director, UAE""",Director,Step 2,180000,2025-07-01,
+Core Consulting,Strategy,"Strategy Director,""Strategy Director, Market Growth, Middle East"",""Strategy Director, UAE""",Director,Step 3,190000,2025-07-01,
+Core Consulting,Strategy,"Strategist, Associate Strategist,Strategy Associate",Staff,Step 1,90000,2022-02-01,2025-06-30
+Core Consulting,Strategy,"Strategist, Associate Strategist,Strategy Associate",Staff,Step 2,110000,2022-02-01,2025-06-30
+Core Consulting,Strategy,Senior Strategist,Senior,Step 1,120000,2022-02-01,2025-06-30
+Core Consulting,Strategy,Senior Strategist,Senior,Step 2,140000,2022-02-01,2025-06-30
+Core Consulting,Strategy,"Strategy Director,""Strategy Director, Market Growth, Middle East"",""Strategy Director, UAE""",Director,Step 1,155000,2022-02-01,2025-06-30
+Core Consulting,Strategy,"Strategy Director,""Strategy Director, Market Growth, Middle East"",""Strategy Director, UAE""",Director,Step 2,170000,2022-02-01,2025-06-30
+Core Consulting,Strategy,"Strategy Director,""Strategy Director, Market Growth, Middle East"",""Strategy Director, UAE""",Director,Step 3,185000,2022-02-01,2025-06-30
+Core Consulting,Strategy,"Strategist, Associate Strategist,Strategy Associate",Staff,Step 1,,2016-01-01,2022-01-31
+Core Consulting,Strategy,"Strategist, Associate Strategist,Strategy Associate",Staff,Step 2,,2016-01-01,2022-01-31
+Core Consulting,Strategy,Senior Strategist,Senior,Step 1,,2016-01-01,2022-01-31
+Core Consulting,Strategy,Senior Strategist,Senior,Step 2,,2016-01-01,2022-01-31
+Core Consulting,Strategy,"Strategy Director,""Strategy Director, Market Growth, Middle East"",""Strategy Director, UAE""",Director,Step 1,,2016-01-01,2022-01-31
+Core Consulting,Strategy,"Strategy Director,""Strategy Director, Market Growth, Middle East"",""Strategy Director, UAE""",Director,Step 2,,2016-01-01,2022-01-31
+Core Consulting,Strategy,"Strategy Director,""Strategy Director, Market Growth, Middle East"",""Strategy Director, UAE""",Director,Step 3,,2016-01-01,2022-01-31
+Core Consulting,"Tech, Studio, Studio Tech/UX","Audio Producer,UX Designer,Creative Technologist",Staff,Step 1,100000,2025-07-01,
+Core Consulting,"Tech, Studio, Studio Tech/UX","Audio Producer,UX Designer,Creative Technologist",Staff,Step 2,112000,2025-07-01,
+Core Consulting,"Tech, Studio, Studio Tech/UX","Senior Audio Producer,Senior UX Designer,Senior User Experience Researcher",Senior,Step 1,125000,2025-07-01,
+Core Consulting,"Tech, Studio, Studio Tech/UX","Senior Audio Producer,Senior UX Designer,Senior User Experience Researcher",Senior,Step 2,142000,2025-07-01,
+Core Consulting,"Tech, Studio, Studio Tech/UX","Creative Systems Technology Director,Creative Technology Director,User Experience Director",Director,Step 1,160000,2025-07-01,
+Core Consulting,"Tech, Studio, Studio Tech/UX","Creative Systems Technology Director,Creative Technology Director,User Experience Director",Director,Step 2,180000,2025-07-01,
+Core Consulting,"Tech, Studio, Studio Tech/UX","Creative Systems Technology Director,Creative Technology Director,User Experience Director",Director,Step 3,190000,2025-07-01,
+Core Consulting,"Tech, Studio, Studio Tech/UX","Audio Producer,UX Designer,Creative Technologist",Staff,Step 1,90000,2022-02-01,2025-06-30
+Core Consulting,"Tech, Studio, Studio Tech/UX","Audio Producer,UX Designer,Creative Technologist",Staff,Step 2,110000,2022-02-01,2025-06-30
+Core Consulting,"Tech, Studio, Studio Tech/UX","Senior Audio Producer,Senior UX Designer,Senior User Experience Researcher",Senior,Step 1,120000,2022-02-01,2025-06-30
+Core Consulting,"Tech, Studio, Studio Tech/UX","Senior Audio Producer,Senior UX Designer,Senior User Experience Researcher",Senior,Step 2,140000,2022-02-01,2025-06-30
+Core Consulting,"Tech, Studio, Studio Tech/UX","Creative Systems Technology Director,Creative Technology Director,User Experience Director",Director,Step 1,155000,2022-02-01,2025-06-30
+Core Consulting,"Tech, Studio, Studio Tech/UX","Creative Systems Technology Director,Creative Technology Director,User Experience Director",Director,Step 2,170000,2022-02-01,2025-06-30
+Core Consulting,"Tech, Studio, Studio Tech/UX","Creative Systems Technology Director,Creative Technology Director,User Experience Director",Director,Step 3,185000,2022-02-01,2025-06-30
+Core Consulting,"Tech, Studio, Studio Tech/UX","Audio Producer,UX Designer,Creative Technologist",Staff,Step 1,,2016-01-01,2022-01-31
+Core Consulting,"Tech, Studio, Studio Tech/UX","Audio Producer,UX Designer,Creative Technologist",Staff,Step 2,,2016-01-01,2022-01-31
+Core Consulting,"Tech, Studio, Studio Tech/UX","Senior Audio Producer,Senior UX Designer,Senior User Experience Researcher",Senior,Step 1,,2016-01-01,2022-01-31
+Core Consulting,"Tech, Studio, Studio Tech/UX","Senior Audio Producer,Senior UX Designer,Senior User Experience Researcher",Senior,Step 2,,2016-01-01,2022-01-31
+Core Consulting,"Tech, Studio, Studio Tech/UX","Creative Systems Technology Director,Creative Technology Director,User Experience Director",Director,Step 1,,2016-01-01,2022-01-31
+Core Consulting,"Tech, Studio, Studio Tech/UX","Creative Systems Technology Director,Creative Technology Director,User Experience Director",Director,Step 2,,2016-01-01,2022-01-31
+Core Consulting,"Tech, Studio, Studio Tech/UX","Creative Systems Technology Director,Creative Technology Director,User Experience Director",Director,Step 3,,2016-01-01,2022-01-31

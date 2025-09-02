@@ -56,11 +56,45 @@ FROM (
     CONCAT('Step ', s.step_order) AS `Step`,
     ROUND(
       CASE
-        WHEN cg.role_key IN ('STAFF_AP_UX','SENIOR_AP_UX') AND s.step_order = 1 THEN mn.min_usd
-        WHEN cg.role_key IN ('STAFF_AP_UX','SENIOR_AP_UX') AND s.step_order = 2 THEN FLOOR(GREATEST(p62.salary_usd, mn.min_usd + 10000) / 5000) * 5000
-        WHEN cg.role_key = 'DIR_TECH_UX' AND s.step_order = 1 THEN mn.min_usd
-        WHEN cg.role_key = 'DIR_TECH_UX' AND s.step_order = 2 THEN FLOOR(COALESCE(p50.salary_usd, mn.min_usd) / 5000) * 5000
-        WHEN cg.role_key = 'DIR_TECH_UX' AND s.step_order = 3 THEN COALESCE(p90.salary_usd, mn.min_usd)
+        WHEN cg.role_key IN ('STAFF_AP_UX','SENIOR_AP_UX') AND s.step_order = 1 THEN ROUND(mn.min_usd / 5000, 0) * 5000
+        WHEN cg.role_key = 'STAFF_AP_UX' AND s.step_order = 2 THEN 
+          LEAST(
+            ROUND(GREATEST(p62.salary_usd, (ROUND(mn.min_usd / 5000, 0) * 5000) + 10000) / 5000, 0) * 5000,
+            (ROUND(mn_senior.min_usd / 5000, 0) * 5000) - 5000
+          )
+        WHEN cg.role_key = 'SENIOR_AP_UX' AND s.step_order = 2 THEN 
+          ROUND(GREATEST(p62.salary_usd, (ROUND(mn.min_usd / 5000, 0) * 5000) + 10000) / 5000, 0) * 5000
+        WHEN cg.role_key = 'DIR_TECH_UX' THEN
+          CASE
+            WHEN (
+              (ROUND(mn.min_usd / 5000, 0) * 5000 = ROUND(COALESCE(p50.salary_usd, mn.min_usd) / 5000, 0) * 5000 AND ROUND(COALESCE(p50.salary_usd, mn.min_usd) / 5000, 0) * 5000 <> ROUND(COALESCE(p90.salary_usd, mn.min_usd) / 10000, 0) * 10000)
+              OR (ROUND(mn.min_usd / 5000, 0) * 5000 <> ROUND(COALESCE(p50.salary_usd, mn.min_usd) / 5000, 0) * 5000 AND ROUND(COALESCE(p50.salary_usd, mn.min_usd) / 5000, 0) * 5000 = ROUND(COALESCE(p90.salary_usd, mn.min_usd) / 10000, 0) * 10000)
+              OR (ROUND(mn.min_usd / 5000, 0) * 5000 = ROUND(COALESCE(p90.salary_usd, mn.min_usd) / 10000, 0) * 10000 AND ROUND(mn.min_usd / 5000, 0) * 5000 <> ROUND(COALESCE(p50.salary_usd, mn.min_usd) / 5000, 0) * 5000)
+            ) THEN
+              CASE
+                WHEN s.step_order = 1 THEN LEAST(
+                  ROUND(mn.min_usd / 5000, 0) * 5000,
+                  ROUND(COALESCE(p50.salary_usd, mn.min_usd) / 5000, 0) * 5000,
+                  ROUND(COALESCE(p90.salary_usd, mn.min_usd) / 10000, 0) * 10000
+                )
+                WHEN s.step_order = 2 THEN GREATEST(
+                  ROUND(mn.min_usd / 5000, 0) * 5000,
+                  ROUND(COALESCE(p50.salary_usd, mn.min_usd) / 5000, 0) * 5000,
+                  ROUND(COALESCE(p90.salary_usd, mn.min_usd) / 10000, 0) * 10000
+                )
+                WHEN s.step_order = 3 THEN GREATEST(
+                  ROUND(mn.min_usd / 5000, 0) * 5000,
+                  ROUND(COALESCE(p50.salary_usd, mn.min_usd) / 5000, 0) * 5000,
+                  ROUND(COALESCE(p90.salary_usd, mn.min_usd) / 10000, 0) * 10000
+                )
+              END
+            ELSE
+              CASE
+                WHEN s.step_order = 1 THEN ROUND(mn.min_usd / 5000, 0) * 5000
+                WHEN s.step_order = 2 THEN ROUND(COALESCE(p50.salary_usd, mn.min_usd) / 5000, 0) * 5000
+                WHEN s.step_order = 3 THEN ROUND(COALESCE(p90.salary_usd, mn.min_usd) / 10000, 0) * 10000
+              END
+          END
       END, 2
     ) AS `Annual Salary USD`
   FROM (
@@ -77,8 +111,9 @@ FROM (
     FROM (
       SELECT
         CASE
-          WHEN UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) IN ('AUDIO PRODUCER','UX DESIGNER','USER EXPERIENCE DESIGNER') THEN 'STAFF_AP_UX'
-          WHEN UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) IN ('SENIOR AUDIO PRODUCER','SENIOR UX DESIGNER','SENIOR USER EXPERIENCE RESEARCHER') THEN 'SENIOR_AP_UX'
+          WHEN c.`Employee Number` = 'EMP-000651' AND c.comp_effective_date < DATE('2021-02-16') THEN 'SENIOR_AP_UX'
+          WHEN UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) IN ('AUDIO PRODUCER','UX DESIGNER','USER EXPERIENCE DESIGNER','CREATIVE TECHNOLOGIST') THEN 'STAFF_AP_UX'
+          WHEN UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) IN ('SENIOR AUDIO PRODUCER','SENIOR UX DESIGNER','SENIOR USER EXPERIENCE RESEARCHER','SENIOR EXPERIENCE DESIGNER') THEN 'SENIOR_AP_UX'
           WHEN UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) IN ('CREATIVE SYSTEMS TECHNOLOGY DIRECTOR','CREATIVE TECHNOLOGY DIRECTOR','USER EXPERIENCE DIRECTOR','MANAGING TECHNOLOGY DIRECTOR') THEN 'DIR_TECH_UX'
           ELSE NULL
         END AS role_key
@@ -166,8 +201,9 @@ FROM (
     FROM (
       SELECT
         CASE
-          WHEN UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) IN ('AUDIO PRODUCER','UX DESIGNER','USER EXPERIENCE DESIGNER') THEN 'STAFF_AP_UX'
-          WHEN UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) IN ('SENIOR AUDIO PRODUCER','SENIOR UX DESIGNER','SENIOR USER EXPERIENCE RESEARCHER') THEN 'SENIOR_AP_UX'
+          WHEN c.`Employee Number` = 'EMP-000651' AND c.comp_effective_date < DATE('2021-02-16') THEN 'SENIOR_AP_UX'
+          WHEN UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) IN ('AUDIO PRODUCER','UX DESIGNER','USER EXPERIENCE DESIGNER','CREATIVE TECHNOLOGIST') THEN 'STAFF_AP_UX'
+          WHEN UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) IN ('SENIOR AUDIO PRODUCER','SENIOR UX DESIGNER','SENIOR USER EXPERIENCE RESEARCHER','SENIOR EXPERIENCE DESIGNER') THEN 'SENIOR_AP_UX'
           WHEN UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) IN ('CREATIVE SYSTEMS TECHNOLOGY DIRECTOR','CREATIVE TECHNOLOGY DIRECTOR','USER EXPERIENCE DIRECTOR','MANAGING TECHNOLOGY DIRECTOR') THEN 'DIR_TECH_UX'
           ELSE NULL
         END AS role_key,
@@ -247,14 +283,112 @@ FROM (
         AND UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) NOT LIKE '%FREELANCE%'
         AND c.`Employee Number` <> 'EMP-000922'
         AND (
-          UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) IN ('AUDIO PRODUCER','UX DESIGNER','USER EXPERIENCE DESIGNER')
-          OR UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) IN ('SENIOR AUDIO PRODUCER','SENIOR UX DESIGNER','SENIOR USER EXPERIENCE RESEARCHER')
+          UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) IN ('AUDIO PRODUCER','UX DESIGNER','USER EXPERIENCE DESIGNER','CREATIVE TECHNOLOGIST')
+          OR UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) IN ('SENIOR AUDIO PRODUCER','SENIOR UX DESIGNER','SENIOR USER EXPERIENCE RESEARCHER','SENIOR EXPERIENCE DESIGNER')
           OR UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) IN ('CREATIVE SYSTEMS TECHNOLOGY DIRECTOR','CREATIVE TECHNOLOGY DIRECTOR','USER EXPERIENCE DIRECTOR')
+          OR (c.`Employee Number` = 'EMP-000651' AND c.comp_effective_date < DATE('2021-02-16'))
         )
     ) AS bmin
     WHERE bmin.role_key IS NOT NULL
     GROUP BY role_key
   ) AS mn ON mn.role_key = cg.role_key
+  JOIN (
+    -- min per group (for Senior comparison)
+    SELECT role_key, MIN(salary_usd) AS min_usd
+    FROM (
+      SELECT
+        CASE
+          WHEN c.`Employee Number` = 'EMP-000651' AND c.comp_effective_date < DATE('2021-02-16') THEN 'SENIOR_AP_UX'
+          WHEN UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) IN ('AUDIO PRODUCER','UX DESIGNER','USER EXPERIENCE DESIGNER','CREATIVE TECHNOLOGIST') THEN 'STAFF_AP_UX'
+          WHEN UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) IN ('SENIOR AUDIO PRODUCER','SENIOR UX DESIGNER','SENIOR USER EXPERIENCE RESEARCHER','SENIOR EXPERIENCE DESIGNER') THEN 'SENIOR_AP_UX'
+          WHEN UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) IN ('CREATIVE SYSTEMS TECHNOLOGY DIRECTOR','CREATIVE TECHNOLOGY DIRECTOR','USER EXPERIENCE DIRECTOR','MANAGING TECHNOLOGY DIRECTOR') THEN 'DIR_TECH_UX'
+          ELSE NULL
+        END AS role_key,
+        CAST(REPLACE(REPLACE(c.`Salary`, '$',''), ',', '') AS DECIMAL(12,2)) AS salary_usd
+      FROM (
+        SELECT t1.*, COALESCE(DATE(t1.`Salary Start Date`), DATE(t1.`Start Date`)) AS comp_effective_date
+        FROM `namely_comp_data_history_w_notes` t1
+      ) AS c
+      LEFT JOIN (
+        SELECT p.`Employee Number`, p.comp_effective_date, COALESCE(ob.match_date, af.match_date) AS chosen_date
+        FROM (
+          SELECT DISTINCT COALESCE(DATE(`Salary Start Date`), DATE(`Start Date`)) AS comp_effective_date, `Employee Number`
+          FROM `namely_comp_data_history_w_notes`
+        ) AS p
+        LEFT JOIN (
+          SELECT p2.`Employee Number`, p2.comp_effective_date, MAX(th2.title_change_date) AS match_date
+          FROM (
+            SELECT DISTINCT COALESCE(DATE(`Salary Start Date`), DATE(`Start Date`)) AS comp_effective_date, `Employee Number`
+            FROM `namely_comp_data_history_w_notes`
+          ) p2
+          JOIN (
+            SELECT `Employee Number`, DATE(`Title Change Date`) AS title_change_date
+            FROM `namely_title_history_data_aq`
+            WHERE `Title` IS NOT NULL
+          ) th2 ON th2.`Employee Number` = p2.`Employee Number`
+          WHERE th2.title_change_date <= p2.comp_effective_date
+            AND DATEDIFF(p2.comp_effective_date, th2.title_change_date) <= 15
+          GROUP BY p2.`Employee Number`, p2.comp_effective_date
+        ) ob ON ob.`Employee Number` = p.`Employee Number` AND ob.comp_effective_date = p.comp_effective_date
+        LEFT JOIN (
+          SELECT p3.`Employee Number`, p3.comp_effective_date, MIN(th3.title_change_date) AS match_date
+          FROM (
+            SELECT DISTINCT COALESCE(DATE(`Salary Start Date`), DATE(`Start Date`)) AS comp_effective_date, `Employee Number`
+            FROM `namely_comp_data_history_w_notes`
+          ) p3
+          JOIN (
+            SELECT `Employee Number`, DATE(`Title Change Date`) AS title_change_date
+            FROM `namely_title_history_data_aq`
+            WHERE `Title` IS NOT NULL
+          ) th3 ON th3.`Employee Number` = p3.`Employee Number`
+          WHERE th3.title_change_date >= p3.comp_effective_date
+            AND DATEDIFF(th3.title_change_date, p3.comp_effective_date) <= 15
+          GROUP BY p3.`Employee Number`, p3.comp_effective_date
+        ) af ON af.`Employee Number` = p.`Employee Number` AND af.comp_effective_date = p.comp_effective_date
+      ) AS chosen ON chosen.`Employee Number` = c.`Employee Number` AND chosen.comp_effective_date = c.comp_effective_date
+      LEFT JOIN (
+        SELECT `Employee Number`, DATE(`Title Change Date`) AS title_change_date, `Title`
+        FROM `namely_title_history_data_aq`
+        WHERE `Title` IS NOT NULL
+      ) AS mtit ON mtit.`Employee Number` = c.`Employee Number` AND mtit.title_change_date = chosen.chosen_date
+      LEFT JOIN (
+        SELECT p.`Employee Number`, p.comp_effective_date, MAX(th.title_change_date) AS fb_date
+        FROM (
+          SELECT DISTINCT COALESCE(DATE(`Salary Start Date`), DATE(`Start Date`)) AS comp_effective_date, `Employee Number`
+          FROM `namely_comp_data_history_w_notes`
+        ) AS p
+        JOIN (
+          SELECT `Employee Number`, DATE(`Title Change Date`) AS title_change_date
+          FROM `namely_title_history_data_aq`
+          WHERE `Title` IS NOT NULL
+        ) AS th ON th.`Employee Number` = p.`Employee Number`
+        WHERE th.title_change_date <= p.comp_effective_date
+        GROUP BY p.`Employee Number`, p.comp_effective_date
+      ) AS fb ON fb.`Employee Number` = c.`Employee Number` AND fb.comp_effective_date = c.comp_effective_date
+      LEFT JOIN (
+        SELECT `Employee Number`, DATE(`Title Change Date`) AS title_change_date, `Title`
+        FROM `namely_title_history_data_aq`
+        WHERE `Title` IS NOT NULL
+      ) AS fbtit ON fbtit.`Employee Number` = c.`Employee Number` AND fbtit.title_change_date = fb.fb_date
+      WHERE (TRIM(c.`Department`) IN ('Studio','Tech') OR c.`Department` IS NULL OR TRIM(c.`Department`) = '')
+        AND (c.`Department` IS NULL OR UPPER(TRIM(c.`Department`)) <> 'PRODUCTION')
+        AND UPPER(TRIM(c.`Employee Type`)) = 'STAFF FULL TIME'
+        AND UPPER(TRIM(c.`Type`)) IN ('YEARLY','SALARY','SALARIED','ANNUAL')
+        AND c.`Salary` IS NOT NULL
+        AND CAST(REPLACE(REPLACE(c.`Salary`, '$',''), ',', '') AS DECIMAL(12,2)) > 0
+        AND c.comp_effective_date BETWEEN DATE('2016-01-01') AND DATE('2022-01-31')
+        AND UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) NOT LIKE '%FREELANCE%'
+        AND c.`Employee Number` <> 'EMP-000922'
+        AND (
+          UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) IN ('AUDIO PRODUCER','UX DESIGNER','USER EXPERIENCE DESIGNER','CREATIVE TECHNOLOGIST')
+          OR UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) IN ('SENIOR AUDIO PRODUCER','SENIOR UX DESIGNER','SENIOR USER EXPERIENCE RESEARCHER','SENIOR EXPERIENCE DESIGNER')
+          OR UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) IN ('CREATIVE SYSTEMS TECHNOLOGY DIRECTOR','CREATIVE TECHNOLOGY DIRECTOR','USER EXPERIENCE DIRECTOR','MANAGING TECHNOLOGY DIRECTOR')
+          OR (c.`Employee Number` = 'EMP-000651' AND c.comp_effective_date < DATE('2021-02-16'))
+        )
+    ) AS bmin2
+    WHERE bmin2.role_key IS NOT NULL
+    GROUP BY role_key
+  ) AS mn_senior ON mn_senior.role_key = 'SENIOR_AP_UX'
   LEFT JOIN (
     -- 62.5th percentile per group (for 2-step roles)
     SELECT r.role_key, r.salary_usd, r.rn
@@ -267,8 +401,9 @@ FROM (
         FROM (
           SELECT
             CASE
-              WHEN UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) IN ('AUDIO PRODUCER','UX DESIGNER','USER EXPERIENCE DESIGNER') THEN 'STAFF_AP_UX'
-              WHEN UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) IN ('SENIOR AUDIO PRODUCER','SENIOR UX DESIGNER','SENIOR USER EXPERIENCE RESEARCHER') THEN 'SENIOR_AP_UX'
+              WHEN c.`Employee Number` = 'EMP-000651' AND c.comp_effective_date < DATE('2021-02-16') THEN 'SENIOR_AP_UX'
+              WHEN UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) IN ('AUDIO PRODUCER','UX DESIGNER','USER EXPERIENCE DESIGNER','CREATIVE TECHNOLOGIST') THEN 'STAFF_AP_UX'
+              WHEN UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) IN ('SENIOR AUDIO PRODUCER','SENIOR UX DESIGNER','SENIOR USER EXPERIENCE RESEARCHER','SENIOR EXPERIENCE DESIGNER') THEN 'SENIOR_AP_UX'
               WHEN UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) IN ('CREATIVE SYSTEMS TECHNOLOGY DIRECTOR','CREATIVE TECHNOLOGY DIRECTOR','USER EXPERIENCE DIRECTOR') THEN 'DIR_TECH_UX'
               ELSE NULL
             END AS role_key,
@@ -348,9 +483,10 @@ FROM (
             AND UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) NOT LIKE '%FREELANCE%'
             AND c.`Employee Number` <> 'EMP-000922'
             AND (
-              UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) IN ('AUDIO PRODUCER','UX DESIGNER','USER EXPERIENCE DESIGNER')
-              OR UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) IN ('SENIOR AUDIO PRODUCER','SENIOR UX DESIGNER','SENIOR USER EXPERIENCE RESEARCHER')
+              UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) IN ('AUDIO PRODUCER','UX DESIGNER','USER EXPERIENCE DESIGNER','CREATIVE TECHNOLOGIST')
+              OR UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) IN ('SENIOR AUDIO PRODUCER','SENIOR UX DESIGNER','SENIOR USER EXPERIENCE RESEARCHER','SENIOR EXPERIENCE DESIGNER')
               OR UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) IN ('CREATIVE SYSTEMS TECHNOLOGY DIRECTOR','CREATIVE TECHNOLOGY DIRECTOR','USER EXPERIENCE DIRECTOR','MANAGING TECHNOLOGY DIRECTOR')
+              OR (c.`Employee Number` = 'EMP-000651' AND c.comp_effective_date < DATE('2021-02-16'))
             )
         ) AS base
         ORDER BY base.role_key ASC, base.salary_usd ASC
@@ -370,8 +506,9 @@ FROM (
         FROM (
           SELECT
             CASE
-              WHEN UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) IN ('AUDIO PRODUCER','UX DESIGNER','USER EXPERIENCE DESIGNER') THEN 'STAFF_AP_UX'
-              WHEN UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) IN ('SENIOR AUDIO PRODUCER','SENIOR UX DESIGNER','SENIOR USER EXPERIENCE RESEARCHER') THEN 'SENIOR_AP_UX'
+              WHEN c.`Employee Number` = 'EMP-000651' AND c.comp_effective_date < DATE('2021-02-16') THEN 'SENIOR_AP_UX'
+              WHEN UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) IN ('AUDIO PRODUCER','UX DESIGNER','USER EXPERIENCE DESIGNER','CREATIVE TECHNOLOGIST') THEN 'STAFF_AP_UX'
+              WHEN UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) IN ('SENIOR AUDIO PRODUCER','SENIOR UX DESIGNER','SENIOR USER EXPERIENCE RESEARCHER','SENIOR EXPERIENCE DESIGNER') THEN 'SENIOR_AP_UX'
               WHEN UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) IN ('CREATIVE SYSTEMS TECHNOLOGY DIRECTOR','CREATIVE TECHNOLOGY DIRECTOR','USER EXPERIENCE DIRECTOR') THEN 'DIR_TECH_UX'
               ELSE NULL
             END AS role_key,
@@ -451,9 +588,10 @@ FROM (
             AND UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) NOT LIKE '%FREELANCE%'
             AND c.`Employee Number` <> 'EMP-000922'
             AND (
-              UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) IN ('AUDIO PRODUCER','UX DESIGNER','USER EXPERIENCE DESIGNER')
-              OR UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) IN ('SENIOR AUDIO PRODUCER','SENIOR UX DESIGNER','SENIOR USER EXPERIENCE RESEARCHER')
+              UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) IN ('AUDIO PRODUCER','UX DESIGNER','USER EXPERIENCE DESIGNER','CREATIVE TECHNOLOGIST')
+              OR UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) IN ('SENIOR AUDIO PRODUCER','SENIOR UX DESIGNER','SENIOR USER EXPERIENCE RESEARCHER','SENIOR EXPERIENCE DESIGNER')
               OR UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) IN ('CREATIVE SYSTEMS TECHNOLOGY DIRECTOR','CREATIVE TECHNOLOGY DIRECTOR','USER EXPERIENCE DIRECTOR','MANAGING TECHNOLOGY DIRECTOR')
+              OR (c.`Employee Number` = 'EMP-000651' AND c.comp_effective_date < DATE('2021-02-16'))
             )
         ) AS base
         ORDER BY base.role_key ASC, base.salary_usd ASC
@@ -473,7 +611,7 @@ FROM (
         FROM (
           SELECT
             CASE
-              WHEN UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) IN ('AUDIO PRODUCER','UX DESIGNER','USER EXPERIENCE DESIGNER') THEN 'STAFF_AP_UX'
+              WHEN UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) IN ('AUDIO PRODUCER','UX DESIGNER','USER EXPERIENCE DESIGNER','CREATIVE TECHNOLOGIST') THEN 'STAFF_AP_UX'
               WHEN UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) IN ('SENIOR AUDIO PRODUCER','SENIOR UX DESIGNER','SENIOR USER EXPERIENCE RESEARCHER') THEN 'SENIOR_AP_UX'
               WHEN UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) IN ('CREATIVE SYSTEMS TECHNOLOGY DIRECTOR','CREATIVE TECHNOLOGY DIRECTOR','USER EXPERIENCE DIRECTOR') THEN 'DIR_TECH_UX'
               ELSE NULL
@@ -553,7 +691,7 @@ FROM (
             AND c.comp_effective_date BETWEEN DATE('2016-01-01') AND DATE('2022-01-31')
             AND UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) NOT LIKE '%FREELANCE%'
             AND (
-              UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) IN ('AUDIO PRODUCER','UX DESIGNER','USER EXPERIENCE DESIGNER')
+              UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) IN ('AUDIO PRODUCER','UX DESIGNER','USER EXPERIENCE DESIGNER','CREATIVE TECHNOLOGIST')
               OR UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) IN ('SENIOR AUDIO PRODUCER','SENIOR UX DESIGNER','SENIOR USER EXPERIENCE RESEARCHER')
               OR UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) IN ('CREATIVE SYSTEMS TECHNOLOGY DIRECTOR','CREATIVE TECHNOLOGY DIRECTOR','USER EXPERIENCE DIRECTOR','MANAGING TECHNOLOGY DIRECTOR')
             )

@@ -4,8 +4,8 @@
 - Built percentile-based compensation bands for Tech and Studio roles (excluding Production) over 2016-01-01 → 2022-01-31.
 - Implemented title-to-comp matching consistent with prior work (nearest-in-time with 15-day bounds, then fallbacks) to align titles at each compensation effective date.
 - Produced an analyst-ready matrix for three Tech/Studio role groups and their steps:
-  - Staff: Audio Producer, UX Designer, User Experience Designer (2 steps)
-  - Senior: Senior Audio Producer, Senior UX Designer, Senior User Experience Researcher (2 steps)
+  - Staff: Audio Producer, UX Designer, User Experience Designer, Creative Technologist (2 steps)
+  - Senior: Senior Audio Producer, Senior UX Designer, Senior User Experience Researcher, Senior Experience Designer (2 steps)
   - Director: Creative Systems Technology Director, Creative Technology Director, User Experience Director, Managing Technology Director (3 steps)
 - Allowed NULL/blank departments (some historical records lack department) while still excluding Production.
 - Excluded a specific employee at request: EMP-000922 (Amir Bakhtiar).
@@ -44,17 +44,22 @@ All joins are LEFT JOINs to preserve comp rows.
 
 - Steps by level:
   - 2-step roles (Staff/Senior):
-    - Step 1 = minimum salary in filtered set
-    - Step 2 = ~62.5th percentile at index `CEIL(0.625 * N)`, guardrailed to `>= Step1 + 10000`, rounded down to `$5,000`
+    - Step 1 ≈ minimum, rounded to nearest $5,000
+    - Step 2 ≈ 62.5th percentile, guardrailed to `>= Step1 + $10,000`, rounded to nearest $5,000
+    - Additional constraint: Staff Step 2 is capped to be below Senior Step 1 (max = Senior Step 1 − $5,000)
   - 3-step roles (Director):
-    - Step 1 = minimum
-    - Step 2 = ~50th percentile, rounded down to `$5,000`
-    - Step 3 = ~90th percentile
+    - Step 1 ≈ minimum, rounded to nearest $5,000
+    - Step 2 ≈ 50th percentile, rounded to nearest $5,000
+    - Step 3 ≈ 90th percentile, rounded to nearest $10,000
+    - If only two distinct values exist across the three steps, we collapse to two anchors: Step 1 = lower, Step 2 = higher, Step 3 repeats Step 2
 
 ### Lessons learned
 - Some Tech/Studio records have NULL departments; including NULL/blank departments was necessary to avoid dropping valid rows.
 - Small-N director cohorts can collapse steps (percentiles equal to min). That’s expected when `N` is 1.
 - Guardrailing and rounding produce stable, clean anchors, especially for skewed or small datasets.
+- Title synonym updates (e.g., adding Creative Technologist, Senior Experience Designer) ensure all relevant comp rows are included in the correct group.
+- Targeted safeguard applied for EMP-000651: pre‑2021‑02‑16 comp rows are treated as Senior to avoid misclassification when fallback `Job Title` is Director.
+- Staff Step 2 is explicitly capped to remain below Senior Step 1 to maintain band separation.
 - Explicit employee/title inclusions and exclusions (like adding Managing Technology Director and excluding EMP-000922) help align with business rules.
 
 ### How to run
