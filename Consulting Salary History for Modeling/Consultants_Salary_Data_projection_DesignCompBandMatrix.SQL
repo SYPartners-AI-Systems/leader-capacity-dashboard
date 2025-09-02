@@ -44,7 +44,7 @@ SELECT
        WHEN cg.role_key = 'SENIOR_SD' THEN 'Senior'
   END AS `Level`,
   CONCAT('Step ', s.step_order) AS `Step`,
-  ROUND(
+  (ROUND((
     CASE
       WHEN s.step_order = 1 AND cg.role_key NOT IN ('SENIOR_SD','STAFF_D') THEN mn.min_usd
       WHEN s.step_order = 1 AND cg.role_key = 'STAFF_D' THEN GREATEST(
@@ -79,8 +79,7 @@ SELECT
           ) + 10000
         ) / 5000
       ) * 5000
-    END, 2
-  ) AS `Annual Salary USD`,
+    END) / 5000) * 5000) AS `Annual Salary USD`,
   cnt.total_rows AS `Num Records`,
   DATE('2016-01-01') AS `Comp Band Start Date`,
   DATE('2022-01-31') AS `Comp Band End Date`
