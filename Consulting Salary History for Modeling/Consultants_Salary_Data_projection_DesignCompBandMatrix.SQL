@@ -46,7 +46,15 @@ SELECT
   CONCAT('Step ', s.step_order) AS `Step`,
   ROUND(
     CASE
-      WHEN s.step_order = 1 AND cg.role_key <> 'SENIOR_SD' THEN mn.min_usd
+      WHEN s.step_order = 1 AND cg.role_key NOT IN ('SENIOR_SD','STAFF_D') THEN mn.min_usd
+      WHEN s.step_order = 1 AND cg.role_key = 'STAFF_D' THEN GREATEST(
+        mn.min_usd,
+        /* Associate Step 2 + 1 strictly as Staff floor */
+        COALESCE(
+          FLOOR(GREATEST(asp62.assoc_p62_usd, COALESCE(asmin.assoc_min_usd, 0) + 10000) / 5000) * 5000 + 1,
+          COALESCE(asmin.assoc_min_usd, 0) + 10001
+        )
+      )
       WHEN s.step_order = 1 AND cg.role_key = 'SENIOR_SD' THEN GREATEST(
         mn.min_usd,
         COALESCE(
@@ -182,6 +190,10 @@ JOIN (
         AND CAST(REPLACE(REPLACE(c.`Salary`, '$',''), ',', '') AS DECIMAL(12,2)) > 0
         AND DATE(c.comp_effective_date) BETWEEN DATE('2016-01-01') AND DATE('2022-01-31')
         AND UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) NOT LIKE '%FREELANCE%'
+        AND UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) NOT LIKE 'VISUAL DESIGNER%'
+        AND UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) NOT LIKE '% PRODUCT DESIGNER%'
+        AND UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) NOT LIKE '%PRODUCTION DESIGNER%'
+        AND UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) NOT LIKE '%STUDIO DESIGNER%'
         AND UPPER(TRIM(c.`Department`)) = 'DESIGN'
     ) base
     HAVING role_key IS NOT NULL
@@ -488,6 +500,299 @@ LEFT JOIN (
     ) n
   ) idx ON idx.role_key = r.role_key AND idx.idx_62 = r.rn
 ) AS p62 ON p62.role_key = cg.role_key
+/* Associate 62.5th percentile (for Staff Step 1 guard) - mapping aware */
+LEFT JOIN (
+  SELECT r.role_key, r.salary_usd AS assoc_p62_usd
+  FROM (
+    SELECT ordered.role_key, ordered.salary_usd,
+           @rn_da := IF(@prev_da = ordered.role_key, @rn_da + 1, 1) AS rn,
+           @prev_da := ordered.role_key AS _prev
+    FROM (
+      SELECT
+        CASE
+          WHEN role_title_norm = 'DESIGN ASSOCIATE' THEN 'ASSOC_DA'
+          WHEN role_title_norm = 'DESIGNER' THEN 'STAFF_D'
+          WHEN role_title_norm IN ('SENIOR DESIGNER','SR DESIGNER') THEN 'SENIOR_SD'
+          ELSE NULL
+        END AS role_key,
+        salary_usd
+      FROM (
+        SELECT
+          CAST(REPLACE(REPLACE(c.`Salary`, '$',''), ',', '') AS DECIMAL(12,2)) AS salary_usd,
+          CASE
+            WHEN UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) LIKE 'SR % DESIGNER' THEN 'SR DESIGNER'
+            ELSE UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`)))
+          END AS role_title_norm
+        FROM (
+          SELECT t1.*, COALESCE(DATE(t1.`Salary Start Date`), DATE(t1.`Start Date`)) AS comp_effective_date
+          FROM `namely_comp_data_history_w_notes` t1
+        ) AS c
+        LEFT JOIN (
+          SELECT p.`Employee Number`, p.comp_effective_date, COALESCE(ob.match_date, af.match_date) AS chosen_date
+          FROM (
+            SELECT DISTINCT COALESCE(DATE(`Salary Start Date`), DATE(`Start Date`)) AS comp_effective_date, `Employee Number`
+            FROM `namely_comp_data_history_w_notes`
+          ) AS p
+          LEFT JOIN (
+            SELECT p2.`Employee Number`, p2.comp_effective_date, MAX(th2.title_change_date) AS match_date
+            FROM (
+              SELECT DISTINCT COALESCE(DATE(`Salary Start Date`), DATE(`Start Date`)) AS comp_effective_date, `Employee Number`
+              FROM `namely_comp_data_history_w_notes`
+            ) p2
+            JOIN (
+              SELECT `Employee Number`, DATE(`Title Change Date`) AS title_change_date
+              FROM `namely_title_history_data_aq`
+              WHERE `Title` IS NOT NULL
+            ) th2 ON th2.`Employee Number` = p2.`Employee Number`
+            WHERE th2.title_change_date <= p2.comp_effective_date
+              AND DATEDIFF(p2.comp_effective_date, th2.title_change_date) <= 15
+            GROUP BY p2.`Employee Number`, p2.comp_effective_date
+          ) ob ON ob.`Employee Number` = p.`Employee Number` AND ob.comp_effective_date = p.comp_effective_date
+          LEFT JOIN (
+            SELECT p3.`Employee Number`, p3.comp_effective_date, MIN(th3.title_change_date) AS match_date
+            FROM (
+              SELECT DISTINCT COALESCE(DATE(`Salary Start Date`), DATE(`Start Date`)) AS comp_effective_date, `Employee Number`
+              FROM `namely_comp_data_history_w_notes`
+            ) p3
+            JOIN (
+              SELECT `Employee Number`, DATE(`Title Change Date`) AS title_change_date
+              FROM `namely_title_history_data_aq`
+              WHERE `Title` IS NOT NULL
+            ) th3 ON th3.`Employee Number` = p3.`Employee Number`
+            WHERE th3.title_change_date >= p3.comp_effective_date
+              AND DATEDIFF(th3.title_change_date, p3.comp_effective_date) <= 15
+            GROUP BY p3.`Employee Number`, p3.comp_effective_date
+          ) af ON af.`Employee Number` = p.`Employee Number` AND af.comp_effective_date = p.comp_effective_date
+        ) AS chosen ON chosen.`Employee Number` = c.`Employee Number` AND chosen.comp_effective_date = c.comp_effective_date
+        LEFT JOIN (
+          SELECT `Employee Number`, DATE(`Title Change Date`) AS title_change_date, `Title`
+          FROM `namely_title_history_data_aq`
+          WHERE `Title` IS NOT NULL
+        ) AS mtit ON mtit.`Employee Number` = c.`Employee Number` AND mtit.title_change_date = chosen.chosen_date
+        LEFT JOIN (
+          SELECT p.`Employee Number`, p.comp_effective_date, MAX(th.title_change_date) AS fb_date
+          FROM (
+            SELECT DISTINCT COALESCE(DATE(`Salary Start Date`), DATE(`Start Date`)) AS comp_effective_date, `Employee Number`
+            FROM `namely_comp_data_history_w_notes`
+          ) AS p
+          JOIN (
+            SELECT `Employee Number`, DATE(`Title Change Date`) AS title_change_date
+            FROM `namely_title_history_data_aq`
+            WHERE `Title` IS NOT NULL
+          ) AS th ON th.`Employee Number` = p.`Employee Number`
+          WHERE th.title_change_date <= p.comp_effective_date
+          GROUP BY p.`Employee Number`, p.comp_effective_date
+        ) AS fb ON fb.`Employee Number` = c.`Employee Number`
+        LEFT JOIN (
+          SELECT `Employee Number`, DATE(`Title Change Date`) AS title_change_date, `Title`
+          FROM `namely_title_history_data_aq`
+          WHERE `Title` IS NOT NULL
+        ) AS fbtit ON fbtit.`Employee Number` = c.`Employee Number` AND fbtit.title_change_date = fb.fb_date
+        WHERE
+          c.`Employee Type` = 'Staff Full Time'
+          AND LOWER(TRIM(c.`Type`)) IN ('yearly','salary','salaried','annual')
+          AND c.`Salary` IS NOT NULL
+          AND CAST(REPLACE(REPLACE(c.`Salary`, '$',''), ',', '') AS DECIMAL(12,2)) > 0
+          AND DATE(c.comp_effective_date) BETWEEN DATE('2016-01-01') AND DATE('2022-01-31')
+          AND UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) NOT LIKE '%FREELANCE%'
+          AND UPPER(TRIM(c.`Department`)) = 'DESIGN'
+      ) AS base
+      HAVING role_key = 'ASSOC_DA'
+      ORDER BY role_key, salary_usd ASC
+    ) AS ordered, (SELECT @rn_da := 0, @prev_da := NULL) vars
+  ) r
+  JOIN (
+    SELECT role_key, GREATEST(1, CEIL(COUNT(*) * 0.625)) AS idx_62
+    FROM (
+      SELECT
+        CASE
+          WHEN role_title_norm = 'DESIGN ASSOCIATE' THEN 'ASSOC_DA'
+          WHEN role_title_norm = 'DESIGNER' THEN 'STAFF_D'
+          WHEN role_title_norm IN ('SENIOR DESIGNER','SR DESIGNER') THEN 'SENIOR_SD'
+          ELSE NULL
+        END AS role_key
+      FROM (
+        SELECT
+          CASE
+            WHEN UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) LIKE 'SR % DESIGNER' THEN 'SR DESIGNER'
+            ELSE UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`)))
+          END AS role_title_norm
+        FROM (
+          SELECT t1.*, COALESCE(DATE(t1.`Salary Start Date`), DATE(t1.`Start Date`)) AS comp_effective_date
+          FROM `namely_comp_data_history_w_notes` t1
+        ) AS c
+        LEFT JOIN (
+          SELECT p.`Employee Number`, p.comp_effective_date, COALESCE(ob.match_date, af.match_date) AS chosen_date
+          FROM (
+            SELECT DISTINCT COALESCE(DATE(`Salary Start Date`), DATE(`Start Date`)) AS comp_effective_date, `Employee Number`
+            FROM `namely_comp_data_history_w_notes`
+          ) AS p
+          LEFT JOIN (
+            SELECT p2.`Employee Number`, p2.comp_effective_date, MAX(th2.title_change_date) AS match_date
+            FROM (
+              SELECT DISTINCT COALESCE(DATE(`Salary Start Date`), DATE(`Start Date`)) AS comp_effective_date, `Employee Number`
+              FROM `namely_comp_data_history_w_notes`
+            ) p2
+            JOIN (
+              SELECT `Employee Number`, DATE(`Title Change Date`) AS title_change_date
+              FROM `namely_title_history_data_aq`
+              WHERE `Title` IS NOT NULL
+            ) th2 ON th2.`Employee Number` = p2.`Employee Number`
+            WHERE th2.title_change_date <= p2.comp_effective_date
+              AND DATEDIFF(p2.comp_effective_date, th2.title_change_date) <= 15
+            GROUP BY p2.`Employee Number`, p2.comp_effective_date
+          ) ob ON ob.`Employee Number` = p.`Employee Number` AND ob.comp_effective_date = p.comp_effective_date
+          LEFT JOIN (
+            SELECT p3.`Employee Number`, p3.comp_effective_date, MIN(th3.title_change_date) AS match_date
+            FROM (
+              SELECT DISTINCT COALESCE(DATE(`Salary Start Date`), DATE(`Start Date`)) AS comp_effective_date, `Employee Number`
+              FROM `namely_comp_data_history_w_notes`
+            ) p3
+            JOIN (
+              SELECT `Employee Number`, DATE(`Title Change Date`) AS title_change_date
+              FROM `namely_title_history_data_aq`
+              WHERE `Title` IS NOT NULL
+            ) th3 ON th3.`Employee Number` = p3.`Employee Number`
+            WHERE th3.title_change_date >= p3.comp_effective_date
+              AND DATEDIFF(th3.title_change_date, p3.comp_effective_date) <= 15
+            GROUP BY p3.`Employee Number`, p3.comp_effective_date
+          ) af ON af.`Employee Number` = p.`Employee Number` AND af.comp_effective_date = p.comp_effective_date
+        ) AS chosen ON chosen.`Employee Number` = c.`Employee Number` AND chosen.comp_effective_date = c.comp_effective_date
+        LEFT JOIN (
+          SELECT `Employee Number`, DATE(`Title Change Date`) AS title_change_date, `Title`
+          FROM `namely_title_history_data_aq`
+          WHERE `Title` IS NOT NULL
+        ) AS mtit ON mtit.`Employee Number` = c.`Employee Number` AND mtit.title_change_date = chosen.chosen_date
+        LEFT JOIN (
+          SELECT p.`Employee Number`, p.comp_effective_date, MAX(th.title_change_date) AS fb_date
+          FROM (
+            SELECT DISTINCT COALESCE(DATE(`Salary Start Date`), DATE(`Start Date`)) AS comp_effective_date, `Employee Number`
+            FROM `namely_comp_data_history_w_notes`
+          ) AS p
+          JOIN (
+            SELECT `Employee Number`, DATE(`Title Change Date`) AS title_change_date
+            FROM `namely_title_history_data_aq`
+            WHERE `Title` IS NOT NULL
+          ) AS th ON th.`Employee Number` = p.`Employee Number`
+          WHERE th.title_change_date <= p.comp_effective_date
+          GROUP BY p.`Employee Number`, p.comp_effective_date
+        ) AS fb ON fb.`Employee Number` = c.`Employee Number`
+        LEFT JOIN (
+          SELECT `Employee Number`, DATE(`Title Change Date`) AS title_change_date, `Title`
+          FROM `namely_title_history_data_aq`
+          WHERE `Title` IS NOT NULL
+        ) AS fbtit ON fbtit.`Employee Number` = c.`Employee Number` AND fbtit.title_change_date = fb.fb_date
+        WHERE
+          c.`Employee Type` = 'Staff Full Time'
+          AND LOWER(TRIM(c.`Type`)) IN ('yearly','salary','salaried','annual')
+          AND c.`Salary` IS NOT NULL
+          AND CAST(REPLACE(REPLACE(c.`Salary`, '$',''), ',', '') AS DECIMAL(12,2)) > 0
+          AND DATE(c.comp_effective_date) BETWEEN DATE('2016-01-01') AND DATE('2022-01-31')
+          AND UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) NOT LIKE '%FREELANCE%'
+          AND UPPER(TRIM(c.`Department`)) = 'DESIGN'
+      ) AS grouped
+    ) AS counts
+    GROUP BY role_key
+  ) AS idx ON idx.role_key = r.role_key AND idx.idx_62 = r.rn
+  WHERE r.role_key = 'ASSOC_DA'
+  LIMIT 1
+) AS asp62 ON 1=1
+/* Associate minimum (for Staff Step 1 guard) - mapping aware */
+LEFT JOIN (
+  SELECT MIN(salary_usd) AS assoc_min_usd
+  FROM (
+    SELECT
+      CASE
+        WHEN role_title_norm = 'DESIGN ASSOCIATE' THEN 'ASSOC_DA'
+        WHEN role_title_norm = 'DESIGNER' THEN 'STAFF_D'
+        WHEN role_title_norm IN ('SENIOR DESIGNER','SR DESIGNER') THEN 'SENIOR_SD'
+        ELSE NULL
+      END AS role_key,
+      salary_usd
+    FROM (
+      SELECT
+        CAST(REPLACE(REPLACE(c.`Salary`, '$',''), ',', '') AS DECIMAL(12,2)) AS salary_usd,
+        CASE
+          WHEN UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) LIKE 'SR % DESIGNER' THEN 'SR DESIGNER'
+          ELSE UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`)))
+        END AS role_title_norm
+      FROM (
+        SELECT t1.*, COALESCE(DATE(t1.`Salary Start Date`), DATE(t1.`Start Date`)) AS comp_effective_date
+        FROM `namely_comp_data_history_w_notes` t1
+      ) AS c
+      LEFT JOIN (
+        SELECT p.`Employee Number`, p.comp_effective_date, COALESCE(ob.match_date, af.match_date) AS chosen_date
+        FROM (
+          SELECT DISTINCT COALESCE(DATE(`Salary Start Date`), DATE(`Start Date`)) AS comp_effective_date, `Employee Number`
+          FROM `namely_comp_data_history_w_notes`
+        ) AS p
+        LEFT JOIN (
+          SELECT p2.`Employee Number`, p2.comp_effective_date, MAX(th2.title_change_date) AS match_date
+          FROM (
+            SELECT DISTINCT COALESCE(DATE(`Salary Start Date`), DATE(`Start Date`)) AS comp_effective_date, `Employee Number`
+            FROM `namely_comp_data_history_w_notes`
+          ) p2
+          JOIN (
+            SELECT `Employee Number`, DATE(`Title Change Date`) AS title_change_date
+            FROM `namely_title_history_data_aq`
+            WHERE `Title` IS NOT NULL
+          ) th2 ON th2.`Employee Number` = p2.`Employee Number`
+          WHERE th2.title_change_date <= p2.comp_effective_date
+            AND DATEDIFF(p2.comp_effective_date, th2.title_change_date) <= 15
+          GROUP BY p2.`Employee Number`, p2.comp_effective_date
+        ) ob ON ob.`Employee Number` = p.`Employee Number` AND ob.comp_effective_date = p.comp_effective_date
+        LEFT JOIN (
+          SELECT p3.`Employee Number`, p3.comp_effective_date, MIN(th3.title_change_date) AS match_date
+          FROM (
+            SELECT DISTINCT COALESCE(DATE(`Salary Start Date`), DATE(`Start Date`)) AS comp_effective_date, `Employee Number`
+            FROM `namely_comp_data_history_w_notes`
+          ) p3
+          JOIN (
+            SELECT `Employee Number`, DATE(`Title Change Date`) AS title_change_date
+            FROM `namely_title_history_data_aq`
+            WHERE `Title` IS NOT NULL
+          ) th3 ON th3.`Employee Number` = p3.`Employee Number`
+          WHERE th3.title_change_date >= p3.comp_effective_date
+            AND DATEDIFF(th3.title_change_date, p3.comp_effective_date) <= 15
+          GROUP BY p3.`Employee Number`, p3.comp_effective_date
+        ) af ON af.`Employee Number` = p.`Employee Number` AND af.comp_effective_date = p.comp_effective_date
+      ) AS chosen ON chosen.`Employee Number` = c.`Employee Number` AND chosen.comp_effective_date = c.comp_effective_date
+      LEFT JOIN (
+        SELECT `Employee Number`, DATE(`Title Change Date`) AS title_change_date, `Title`
+        FROM `namely_title_history_data_aq`
+        WHERE `Title` IS NOT NULL
+      ) AS mtit ON mtit.`Employee Number` = c.`Employee Number` AND mtit.title_change_date = chosen.chosen_date
+      LEFT JOIN (
+        SELECT p.`Employee Number`, p.comp_effective_date, MAX(th.title_change_date) AS fb_date
+        FROM (
+          SELECT DISTINCT COALESCE(DATE(`Salary Start Date`), DATE(`Start Date`)) AS comp_effective_date, `Employee Number`
+          FROM `namely_comp_data_history_w_notes`
+        ) AS p
+        JOIN (
+          SELECT `Employee Number`, DATE(`Title Change Date`) AS title_change_date
+          FROM `namely_title_history_data_aq`
+          WHERE `Title` IS NOT NULL
+        ) AS th ON th.`Employee Number` = p.`Employee Number`
+        WHERE th.title_change_date <= p.comp_effective_date
+        GROUP BY p.`Employee Number`, p.comp_effective_date
+      ) AS fb ON fb.`Employee Number` = c.`Employee Number`
+      LEFT JOIN (
+        SELECT `Employee Number`, DATE(`Title Change Date`) AS title_change_date, `Title`
+        FROM `namely_title_history_data_aq`
+        WHERE `Title` IS NOT NULL
+      ) AS fbtit ON fbtit.`Employee Number` = c.`Employee Number` AND fbtit.title_change_date = fb.fb_date
+      WHERE
+        c.`Employee Type` = 'Staff Full Time'
+        AND LOWER(TRIM(c.`Type`)) IN ('yearly','salary','salaried','annual')
+        AND c.`Salary` IS NOT NULL
+        AND CAST(REPLACE(REPLACE(c.`Salary`, '$',''), ',', '') AS DECIMAL(12,2)) > 0
+        AND DATE(c.comp_effective_date) BETWEEN DATE('2016-01-01') AND DATE('2022-01-31')
+        AND UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) NOT LIKE '%FREELANCE%'
+        AND UPPER(TRIM(c.`Department`)) = 'DESIGN'
+    ) AS base
+    HAVING role_key = 'ASSOC_DA'
+  ) AS assoc_salaries
+) AS asmin ON 1=1
 /* Staff 62.5th percentile (for Staff Step 2 guard used by Senior floor) */
 LEFT JOIN (
   SELECT r.salary_usd AS staff_p62_usd
