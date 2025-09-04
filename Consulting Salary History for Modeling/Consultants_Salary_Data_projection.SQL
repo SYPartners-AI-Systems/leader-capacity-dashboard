@@ -1,11 +1,86 @@
 SELECT
-  -- Title mapping (unchanged)
-  c.`Salary Currency`,
+  -- Reordered columns as requested
+  c.`Employee Type`,
+  c.`User Status`,
+  div_ou.`Division`                                            AS `Division`,
+  dept_ou.`Department`                                         AS `Department`,
   COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`)        AS `Job Title`,
+  CASE
+    /* Salary-based Executive override: $350k+ up to $499,999 */
+    WHEN c.`Salary` BETWEEN 349000 AND 499999 THEN 'Executive'
+    WHEN c.`Employee Number` = 'EMP-000635'
+      AND UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) IN (
+        'VENTURE PARTNER & EXECUTIVE DIRECTOR, MIDDLE EAST',
+        'EXECUTIVE DIRECTOR, MIDDLE EAST'
+      )
+      THEN 'Executive'
+    WHEN UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) IN (
+        'PARTNER & HEAD OF STRATEGY TEAM',
+        'PRINCIPAL, STRATEGY',
+        'PRINCIPAL, DESIGN',
+        'PRINCIPAL & HEAD OF DESIGN TEAM',
+        'PRINCIPAL & HEAD OF PROGRAM MANAGEMENT TEAM',
+        'PRINCIPAL, PROGRAM MANAGEMENT'
+      )
+      THEN CASE
+        WHEN UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) LIKE 'PARTNER%' THEN 'Partner/SVP'
+        WHEN UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) LIKE 'PRINCIPAL%' THEN 'Principal/VP'
+      END
+    WHEN c.comp_effective_date = latest_effective.latest_comp_effective_date
+      AND NULLIF(TRIM(c.`Level`), '') IS NOT NULL
+      THEN TRIM(c.`Level`)
+    ELSE COALESCE(ph_title_dept.ph_level, ph_title_any.ph_level, ph_dept_pre.ph_level)
+  END                                                   AS `Level`,
+  CONCAT(
+    'Step ',
+    TRIM(REPLACE(UPPER(
+      CASE
+        /* Salary-based Executive Step override */
+        WHEN c.`Salary` BETWEEN 349000 AND 399999 THEN '1'
+        WHEN c.`Salary` BETWEEN 400000 AND 449999 THEN '2'
+        WHEN c.`Salary` BETWEEN 450000 AND 499999 THEN '3'
+        WHEN c.`Employee Number` = 'EMP-000635'
+          AND UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) IN (
+            'VENTURE PARTNER & EXECUTIVE DIRECTOR, MIDDLE EAST',
+            'EXECUTIVE DIRECTOR, MIDDLE EAST'
+          )
+          THEN '1'
+        WHEN UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) IN (
+            'PARTNER & HEAD OF STRATEGY TEAM',
+            'PRINCIPAL, STRATEGY',
+            'PRINCIPAL, DESIGN',
+            'PRINCIPAL & HEAD OF DESIGN TEAM',
+            'PRINCIPAL & HEAD OF PROGRAM MANAGEMENT TEAM',
+            'PRINCIPAL, PROGRAM MANAGEMENT'
+          )
+          THEN '1'  -- All these titles map to Step 1 based on the philosophy table
+        WHEN c.comp_effective_date = latest_effective.latest_comp_effective_date
+          AND NULLIF(TRIM(c.`Step`), '') IS NOT NULL
+          THEN TRIM(c.`Step`)
+        ELSE COALESCE(ph_title_dept.ph_step, ph_title_any.ph_step, ph_dept_pre.ph_step)
+      END
+    ), 'STEP', ''))
+  )                                                     AS `Step`,
+  c.`Salary`,
   COALESCE(chosen.chosen_date, fb.fb_date)                     AS `Title Change Date (Used)`,
-  GREATEST(c.comp_effective_date, DATE('2016-01-01'))          AS `Comp Effective Date`,
-
-  -- Org Units: Office Location + dates
+  c.comp_effective_date                                        AS `Comp Effective Date`,
+  c.`Salary Start Date`,
+  NULLIF(
+    LEAST(
+      COALESCE(DATE(c.`Salary End Date`), DATE('9999-12-31')),
+      COALESCE(DATE_SUB(mlt_transition.mlt_start_date, INTERVAL 1 DAY), DATE('9999-12-31')),
+      COALESCE(DATE_SUB(first_400k.first_400k_date, INTERVAL 1 DAY), DATE('9999-12-31')),
+      COALESCE(DATE(tmeta.`Termination Date`), DATE('9999-12-31'))
+    ),
+    DATE('9999-12-31')
+  ) AS `Salary End Date`,
+  c.`Salary Notes`,
+  c.`Employee Number`,
+  c.`Last Name`,
+  c.`First Name`,
+  tmeta.`Preferred First Name` AS `Preferred First Name`,
+  c.`Start Date` AS `Hire Date`,
+  tmeta.`Termination Date` AS `Termination Date`,
   office_ou.`Office_Location`                                  AS `Office Location`,
   office_ou.start_date                                         AS `Office Location Start Date`,
   CASE
@@ -13,57 +88,20 @@ SELECT
       THEN COALESCE(office_ou.end_date, DATE(tmeta.`Termination Date`))
     ELSE office_ou.end_date
   END                                                         AS `Office Location End Date`,
-
-  -- Org Units: Department + dates
-  dept_ou.`Department`                                         AS `Department`,
   dept_ou.start_date                                           AS `Department Start Date`,
   CASE
     WHEN UPPER(TRIM(c.`User Status`)) = 'INACTIVE EMPLOYEE'
       THEN COALESCE(dept_ou.end_date, DATE(tmeta.`Termination Date`))
     ELSE dept_ou.end_date
   END                                                         AS `Department End Date`,
-
-  -- Org Units: Division + dates
-  div_ou.`Division`                                            AS `Division`,
   div_ou.start_date                                            AS `Division Start Date`,
   CASE
     WHEN UPPER(TRIM(c.`User Status`)) = 'INACTIVE EMPLOYEE'
       THEN COALESCE(div_ou.end_date, DATE(tmeta.`Termination Date`))
     ELSE div_ou.end_date
   END                                                         AS `Division End Date`,
-
-  -- Other comp fields
-  c.`Salary Notes`,
-  c.`Start Date` AS `Hire Date`,
-  c.`Employee Number`,
-  CASE
-    WHEN c.comp_effective_date = latest_effective.latest_comp_effective_date
-      AND NULLIF(TRIM(c.`Level`), '') IS NOT NULL
-      THEN TRIM(c.`Level`)
-    ELSE COALESCE(ph_title_dept.ph_level, ph_title_any.ph_level, ph_dept_pre.ph_level)
-  END                                                   AS `Level`,
-  CASE
-    WHEN mlt_transition.mlt_start_date IS NOT NULL THEN LEAST(
-      COALESCE(DATE(c.`Salary End Date`), DATE('9999-12-31')),
-      DATE_SUB(mlt_transition.mlt_start_date, INTERVAL 1 DAY)
-    )
-    ELSE c.`Salary End Date`
-  END AS `Salary End Date`,
-  CASE
-    WHEN c.comp_effective_date = latest_effective.latest_comp_effective_date
-      AND NULLIF(TRIM(c.`Step`), '') IS NOT NULL
-      THEN TRIM(c.`Step`)
-    ELSE COALESCE(ph_title_dept.ph_step, ph_title_any.ph_step, ph_dept_pre.ph_step)
-  END                                                   AS `Step`,
-  c.`Salary Start Date`,
-  c.`User Status`,
-  c.`Last Name`,
-  c.`Salary`,
+  c.`Salary Currency`,
   c.`Type`,
-  c.`Employee Type`,
-  c.`First Name`,
-  tmeta.`Preferred First Name` AS `Preferred First Name`,
-  tmeta.`Termination Date` AS `Termination Date`,
   COALESCE(ph_title_dept.target_annual_salary_usd,
            ph_title_any.target_annual_salary_usd,
            ph_dept_pre.target_annual_salary_usd)             AS `Target Annual Salary USD`
@@ -74,6 +112,17 @@ FROM (
     COALESCE(DATE(t1.`Salary Start Date`), DATE(t1.`Start Date`)) AS comp_effective_date
   FROM `namely_comp_data_history_w_notes` t1
 ) AS c
+
+/* First salary >= $400k per employee (to cap prior records) */
+LEFT JOIN (
+  SELECT
+    `Employee Number` AS employee_number,
+    MIN(COALESCE(DATE(`Salary Start Date`), DATE(`Start Date`))) AS first_400k_date
+  FROM `namely_comp_data_history_w_notes`
+  WHERE CAST(REPLACE(REPLACE(`Salary`, '$',''), ',', '') AS DECIMAL(12,2)) >= 400000
+  GROUP BY `Employee Number`
+) AS first_400k
+  ON first_400k.employee_number = c.`Employee Number`
 
 /* Latest comp effective date per employee */
 LEFT JOIN (
@@ -355,13 +404,44 @@ LEFT JOIN (
 ) AS ph_title_dept
   ON (
        FIND_IN_SET(
-         UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))),
+         UPPER(TRIM(
+           CASE
+             WHEN UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) IN ('SENIOR USER EXPERIENCE DESIGNER','SENIOR TECHNOLOGY CONSULTANT','SENIOR EXPERIENCE DESIGNER') THEN 'SENIOR UX DESIGNER'
+             WHEN UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) IN ('STUDIO DIRECTOR','USER EXPERIENCE DIRECTOR') THEN 'CREATIVE TECHNOLOGY DIRECTOR'
+             WHEN UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) IN ('PRODUCTION DIRECTOR','MANAGING PRODUCTION DIRECTOR') THEN 'PRODUCTION DESIGN DIRECTOR'
+             WHEN UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) = 'PRODUCTION DESIGN MANAGER' THEN 'SENIOR PRODUCTION DESIGNER'
+             ELSE COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`)
+           END
+         )),
          REPLACE(UPPER(ph_title_dept.role_titles), ', ', ',')
        ) > 0
+       OR FIND_IN_SET(
+         UPPER(TRIM(
+           CASE
+             WHEN UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) IN ('SENIOR USER EXPERIENCE DESIGNER','SENIOR TECHNOLOGY CONSULTANT') THEN 'SENIOR UX DESIGNER'
+             WHEN UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) = 'STUDIO DIRECTOR' THEN 'USER EXPERIENCE DIRECTOR'
+             ELSE COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`)
+           END
+         )),
+         REPLACE(UPPER(REPLACE(REPLACE(ph_title_dept.role_titles, '"', ''), "'", '')), ', ', ',')
+       ) > 0
        OR LOCATE(
-             UPPER(TRIM(REPLACE(REPLACE(REPLACE(REPLACE(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`),'.',''),'/',''),'-',''),',',''))),
+             UPPER(TRIM(REPLACE(REPLACE(REPLACE(REPLACE(
+               CASE
+                 WHEN UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) IN ('SENIOR USER EXPERIENCE DESIGNER','SENIOR TECHNOLOGY CONSULTANT') THEN 'SENIOR UX DESIGNER'
+                 WHEN UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) = 'STUDIO DIRECTOR' THEN 'USER EXPERIENCE DIRECTOR'
+                 ELSE COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`)
+               END
+             ,'.',''),'/',''),'-',''),',',''))),
              UPPER(TRIM(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(ph_title_dept.role_titles,'.',''),'/',''),'-',''),',',' '),'  ',' ')))
           ) > 0
+       OR UPPER(TRIM(ph_title_dept.role_titles)) LIKE CONCAT('%', UPPER(TRIM(
+           CASE
+             WHEN UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) IN ('SENIOR USER EXPERIENCE DESIGNER','SENIOR TECHNOLOGY CONSULTANT') THEN 'SENIOR UX DESIGNER'
+             WHEN UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) = 'STUDIO DIRECTOR' THEN 'USER EXPERIENCE DIRECTOR'
+             ELSE COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`)
+           END
+       )), '%')
      )
  AND (
        UPPER(TRIM(COALESCE(dept_ou.`Department`, div_ou.`Division`, c.`Division`))) = UPPER(TRIM(ph_title_dept.department))
@@ -376,7 +456,15 @@ LEFT JOIN (
         FROM `dataflow_schema`.`consulting_comp_philosophy` p2
         WHERE UPPER(TRIM(p2.`Department`)) = UPPER(TRIM(COALESCE(dept_ou.`Department`, div_ou.`Division`, c.`Division`)))
           AND FIND_IN_SET(
-                UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))),
+                UPPER(TRIM(
+                  CASE
+                    WHEN UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) IN ('SENIOR USER EXPERIENCE DESIGNER','SENIOR TECHNOLOGY CONSULTANT','SENIOR EXPERIENCE DESIGNER') THEN 'SENIOR UX DESIGNER'
+                    WHEN UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) IN ('STUDIO DIRECTOR','USER EXPERIENCE DIRECTOR') THEN 'CREATIVE TECHNOLOGY DIRECTOR'
+                    WHEN UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) IN ('PRODUCTION DIRECTOR','MANAGING PRODUCTION DIRECTOR') THEN 'PRODUCTION DESIGN DIRECTOR'
+                    WHEN UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) = 'PRODUCTION DESIGN MANAGER' THEN 'SENIOR PRODUCTION DESIGNER'
+                    ELSE COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`)
+                  END
+                )),
                 REPLACE(UPPER(p2.`Roles/ Titles`), ', ', ',')
               ) > 0
           AND GREATEST(c.comp_effective_date, DATE('2016-01-01')) >= COALESCE(
@@ -403,7 +491,13 @@ LEFT JOIN (
         FROM `dataflow_schema`.`consulting_comp_philosophy` p2
         WHERE UPPER(TRIM(p2.`Department`)) = UPPER(TRIM(COALESCE(dept_ou.`Department`, div_ou.`Division`, c.`Division`)))
           AND FIND_IN_SET(
-                UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))),
+                UPPER(TRIM(
+                  CASE
+                    WHEN UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) IN ('SENIOR USER EXPERIENCE DESIGNER','SENIOR TECHNOLOGY CONSULTANT') THEN 'SENIOR UX DESIGNER'
+                    WHEN UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) = 'STUDIO DIRECTOR' THEN 'USER EXPERIENCE DIRECTOR'
+                    ELSE COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`)
+                  END
+                )),
                 REPLACE(UPPER(p2.`Roles/ Titles`), ', ', ',')
               ) > 0
           AND GREATEST(c.comp_effective_date, DATE('2016-01-01')) >= COALESCE(
@@ -448,13 +542,44 @@ LEFT JOIN (
 ) AS ph_title_any
   ON (
        FIND_IN_SET(
-         UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))),
+         UPPER(TRIM(
+           CASE
+             WHEN UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) IN ('SENIOR USER EXPERIENCE DESIGNER','SENIOR TECHNOLOGY CONSULTANT','SENIOR EXPERIENCE DESIGNER') THEN 'SENIOR UX DESIGNER'
+             WHEN UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) IN ('STUDIO DIRECTOR','USER EXPERIENCE DIRECTOR') THEN 'CREATIVE TECHNOLOGY DIRECTOR'
+             WHEN UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) IN ('PRODUCTION DIRECTOR','MANAGING PRODUCTION DIRECTOR') THEN 'PRODUCTION DESIGN DIRECTOR'
+             WHEN UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) = 'PRODUCTION DESIGN MANAGER' THEN 'SENIOR PRODUCTION DESIGNER'
+             ELSE COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`)
+           END
+         )),
          REPLACE(UPPER(ph_title_any.role_titles), ', ', ',')
        ) > 0
+       OR FIND_IN_SET(
+         UPPER(TRIM(
+           CASE
+             WHEN UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) IN ('SENIOR USER EXPERIENCE DESIGNER','SENIOR TECHNOLOGY CONSULTANT') THEN 'SENIOR UX DESIGNER'
+             WHEN UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) = 'STUDIO DIRECTOR' THEN 'USER EXPERIENCE DIRECTOR'
+             ELSE COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`)
+           END
+         )),
+         REPLACE(UPPER(REPLACE(REPLACE(ph_title_any.role_titles, '"', ''), "'", '')), ', ', ',')
+       ) > 0
        OR LOCATE(
-             UPPER(TRIM(REPLACE(REPLACE(REPLACE(REPLACE(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`),'.',''),'/',''),'-',''),',',''))),
+             UPPER(TRIM(REPLACE(REPLACE(REPLACE(REPLACE(
+               CASE
+                 WHEN UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) IN ('SENIOR USER EXPERIENCE DESIGNER','SENIOR TECHNOLOGY CONSULTANT') THEN 'SENIOR UX DESIGNER'
+                 WHEN UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) = 'STUDIO DIRECTOR' THEN 'USER EXPERIENCE DIRECTOR'
+                 ELSE COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`)
+               END
+             ,'.',''),'/',''),'-',''),',',''))),
              UPPER(TRIM(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(ph_title_any.role_titles,'.',''),'/',''),'-',''),',',' '),'  ',' ')))
           ) > 0
+       OR UPPER(TRIM(ph_title_any.role_titles)) LIKE CONCAT('%', UPPER(TRIM(
+           CASE
+             WHEN UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) IN ('SENIOR USER EXPERIENCE DESIGNER','SENIOR TECHNOLOGY CONSULTANT') THEN 'SENIOR UX DESIGNER'
+             WHEN UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) = 'STUDIO DIRECTOR' THEN 'USER EXPERIENCE DIRECTOR'
+             ELSE COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`)
+           END
+       )), '%')
      )
  AND GREATEST(c.comp_effective_date, DATE('2016-01-01')) >= ph_title_any.ph_start_date
  AND (ph_title_any.ph_end_date IS NULL OR GREATEST(c.comp_effective_date, DATE('2016-01-01')) <= ph_title_any.ph_end_date)
@@ -463,7 +588,15 @@ LEFT JOIN (
         SELECT MAX(CAST(REPLACE(REPLACE(p3.`Annual Salary USD`, '$',''), ',', '') AS DECIMAL(12,2)))
         FROM `dataflow_schema`.`consulting_comp_philosophy` p3
         WHERE FIND_IN_SET(
-                UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))),
+                UPPER(TRIM(
+                  CASE
+                    WHEN UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) IN ('SENIOR USER EXPERIENCE DESIGNER','SENIOR TECHNOLOGY CONSULTANT','SENIOR EXPERIENCE DESIGNER') THEN 'SENIOR UX DESIGNER'
+                    WHEN UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) IN ('STUDIO DIRECTOR','USER EXPERIENCE DIRECTOR') THEN 'CREATIVE TECHNOLOGY DIRECTOR'
+                    WHEN UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) IN ('PRODUCTION DIRECTOR','MANAGING PRODUCTION DIRECTOR') THEN 'PRODUCTION DESIGN DIRECTOR'
+                    WHEN UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) = 'PRODUCTION DESIGN MANAGER' THEN 'SENIOR PRODUCTION DESIGNER'
+                    ELSE COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`)
+                  END
+                )),
                 REPLACE(UPPER(p3.`Roles/ Titles`), ', ', ',')
               ) > 0
           AND GREATEST(c.comp_effective_date, DATE('2016-01-01')) >= COALESCE(
@@ -489,7 +622,13 @@ LEFT JOIN (
         SELECT MIN(CAST(REPLACE(REPLACE(p3.`Annual Salary USD`, '$',''), ',', '') AS DECIMAL(12,2)))
         FROM `dataflow_schema`.`consulting_comp_philosophy` p3
         WHERE FIND_IN_SET(
-                UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))),
+                UPPER(TRIM(
+                  CASE
+                    WHEN UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) IN ('SENIOR USER EXPERIENCE DESIGNER','SENIOR TECHNOLOGY CONSULTANT') THEN 'SENIOR UX DESIGNER'
+                    WHEN UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) = 'STUDIO DIRECTOR' THEN 'USER EXPERIENCE DIRECTOR'
+                    ELSE COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`)
+                  END
+                )),
                 REPLACE(UPPER(p3.`Roles/ Titles`), ', ', ',')
               ) > 0
           AND GREATEST(c.comp_effective_date, DATE('2016-01-01')) >= COALESCE(
@@ -565,9 +704,7 @@ LEFT JOIN (
  AND GREATEST(c.comp_effective_date, DATE('2016-01-01')) <= DATE('2022-01-31')
  AND GREATEST(c.comp_effective_date, DATE('2016-01-01')) >= ph_dept_pre.ph_start_date
  AND (ph_dept_pre.ph_end_date IS NULL OR GREATEST(c.comp_effective_date, DATE('2016-01-01')) <= ph_dept_pre.ph_end_date)
- AND UPPER(TRIM(COALESCE(dept_ou.`Department`, div_ou.`Division`, c.`Division`))) NOT IN (
-       'TECH','STUDIO','STUDIO TECH/UX','PRODUCTION,STUDIO,STUDIO DESIGN'
-     )
+ -- Include all consulting departments; previously excluded TECH/STUDIO cohorts removed
  AND ph_dept_pre.target_annual_salary_usd = COALESCE(
        (
          SELECT MAX(CAST(REPLACE(REPLACE(p0.`Annual Salary USD`, '$',''), ',', '') AS DECIMAL(12,2)))
@@ -614,4 +751,104 @@ LEFT JOIN (
                  )
                )
        )
-     );
+     )
+
+/* Additional diagnostic query to check exact title matching */
+/*
+SELECT DISTINCT
+    `Roles/ Titles`,
+    `Level`,
+    `Step`,
+    `Department`,
+    `Comp Band Start Date`,
+    `Comp Band End Date`,
+    `Annual Salary USD`,
+    -- Check if specific titles are found
+    FIND_IN_SET('PARTNER & HEAD OF STRATEGY TEAM', REPLACE(UPPER(`Roles/ Titles`), ', ', ',')) as title_1_match,
+    FIND_IN_SET('PRINCIPAL, STRATEGY', REPLACE(UPPER(`Roles/ Titles`), ', ', ',')) as title_2_match,
+    FIND_IN_SET('PRINCIPAL, DESIGN', REPLACE(UPPER(`Roles/ Titles`), ', ', ',')) as title_3_match,
+    FIND_IN_SET('PRINCIPAL & HEAD OF DESIGN TEAM', REPLACE(UPPER(`Roles/ Titles`), ', ', ',')) as title_4_match,
+    FIND_IN_SET('PRINCIPAL & HEAD OF PROGRAM MANAGEMENT TEAM', REPLACE(UPPER(`Roles/ Titles`), ', ', ',')) as title_5_match,
+    FIND_IN_SET('PRINCIPAL, PROGRAM MANAGEMENT', REPLACE(UPPER(`Roles/ Titles`), ', ', ',')) as title_6_match
+FROM `dataflow_schema`.`consulting_comp_philosophy`
+WHERE UPPER(`Roles/ Titles`) LIKE '%PARTNER%'
+   OR UPPER(`Roles/ Titles`) LIKE '%PRINCIPAL%'
+ORDER BY `Roles/ Titles`;
+*/
+
+/* Exclude salary reductions for senior leaders effective 2024-08-01 */
+/* Exclude employees who joined Managing Partners, Founders, Executive Management departments or MLT division */
+/* But keep historical records from BEFORE they joined these groups */
+WHERE NOT (
+    c.`Employee Number` IN (
+        'EMP-000748', 'EMP-000616', 'EMP-000211', 'EMP-001292', 'EMP-000109',
+        'EMP-001047', 'EMP-000328', 'EMP-000054', 'EMP-000377', 'EMP-000635',
+        'EMP-000024', 'EMP-001269', 'EMP-000271', 'EMP-000509', 'EMP-000315',
+        'EMP-000075', 'EMP-000580', 'EMP-000208', 'EMP-000001', 'EMP-000031'
+    )
+    AND GREATEST(c.comp_effective_date, DATE('2016-01-01')) >= DATE('2024-08-01')
+)
+AND NOT EXISTS (
+    /* Exclude records where compensation effective date is AFTER joining excluded departments/divisions */
+    SELECT 1
+    FROM `dataflow_schema`.`employee_org_units_dept_div_loc` ou
+    WHERE ou.`Email` = LOWER(TRIM(c.`Work Email`))
+      AND (
+          (TRIM(ou.`Org Type`) IN ('Department','Departments')
+           AND UPPER(TRIM(ou.`Org Unit`)) IN ('MANAGING PARTNERS', 'FOUNDERS', 'EXECUTIVE MANAGEMENT'))
+          OR
+          (TRIM(ou.`Org Type`) IN ('Division','Divisions')
+           AND UPPER(TRIM(ou.`Org Unit`)) = 'MLT')
+      )
+      AND c.comp_effective_date >= DATE(ou.`Assignment Start Date`)
+)
+AND NOT (
+    /* Exclude freelance, freelancer, and intern roles */
+    UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) LIKE '%FREELANCE%'
+    OR UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) LIKE '%FREELANCER%'
+    OR UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) LIKE '%INTERN%'
+)
+AND NOT (
+    /* Exclude rows with Job Title TERMINATED */
+    UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) = 'TERMINATED'
+)
+AND NOT (
+    /* Exclude records with Comp Effective Date or Salary Start Date before 2016-01-01 */
+    /* But keep records for active employees with long tenure */
+    (c.comp_effective_date < DATE('2016-01-01')
+     OR DATE(c.`Salary Start Date`) < DATE('2016-01-01'))
+    AND UPPER(TRIM(c.`User Status`)) != 'ACTIVE EMPLOYEE'
+)
+AND NOT (
+    /* Exclude erroneous 2015-07-15 dates from payroll system rollout */
+    c.comp_effective_date = DATE('2015-07-15')
+    OR DATE(c.`Salary Start Date`) = DATE('2015-07-15')
+)
+AND NOT (
+    /* Exclude employees in specified non-consulting departments */
+    UPPER(TRIM(COALESCE(dept_ou.`Department`, div_ou.`Division`, c.`Division`))) IN (
+        'ADMIN',
+        'BRAND',
+        'BUSINESS DEVELOPMENT',
+        'BUSINESS OPERATIONS',
+        'BUSINESS PERFORMANCE',
+        'ENTERPRISE TECHNOLOGY',
+        'FINANCE',
+        'INTERN PROGRAM',
+        'LEARNING & FLOURISHING',
+        'OFFICE & COMMUNITY OPS',
+        'PEOPLE',
+        'TALENT'
+    )
+)
+AND NOT (
+    /* Exclude senior leaders once salary reaches >= $400,000 */
+    c.`Salary` >= 400000
+)
+AND NOT EXISTS (
+    /* Exclude employees with job titles listed in external excluded_roles (normalized by lowercase and ignoring commas) */
+    SELECT 1
+    FROM `dataflow_schema`.`excluded_roles` er
+    WHERE REPLACE(LOWER(TRIM(er.`Job Titles`)), ',', '') = REPLACE(LOWER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))), ',', '')
+)
+;
