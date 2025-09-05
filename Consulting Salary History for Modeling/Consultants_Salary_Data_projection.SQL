@@ -6,6 +6,10 @@ SELECT
   dept_ou.`Department`                                         AS `Department`,
   COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`)        AS `Job Title`,
   CASE
+    /* 2016-01-01 to 2022-01-31: salary-only mapping via department philosophy */
+    WHEN c.comp_effective_date BETWEEN DATE('2016-01-01') AND DATE('2022-01-31')
+      AND ph_dept_pre.ph_level IS NOT NULL
+      THEN ph_dept_pre.ph_level
     /* Salary-based Executive override: $350k+ up to $499,999 */
     WHEN c.`Salary` BETWEEN 349000 AND 499999 THEN 'Executive'
     WHEN c.`Employee Number` = 'EMP-000635'
@@ -35,6 +39,10 @@ SELECT
     'Step ',
     TRIM(REPLACE(UPPER(
       CASE
+        /* 2016-01-01 to 2022-01-31: salary-only mapping via department philosophy */
+        WHEN c.comp_effective_date BETWEEN DATE('2016-01-01') AND DATE('2022-01-31')
+          AND ph_dept_pre.ph_step IS NOT NULL
+          THEN ph_dept_pre.ph_step
         /* Salary-based Executive Step override */
         WHEN c.`Salary` BETWEEN 349000 AND 399999 THEN '1'
         WHEN c.`Salary` BETWEEN 400000 AND 449999 THEN '2'
@@ -65,7 +73,7 @@ SELECT
   COALESCE(chosen.chosen_date, fb.fb_date)                     AS `Title Change Date (Used)`,
   c.comp_effective_date                                        AS `Comp Effective Date`,
   c.`Salary Start Date`,
-  NULLIF(
+  CAST(NULLIF(
     LEAST(
       COALESCE(DATE(c.`Salary End Date`), DATE('9999-12-31')),
       COALESCE(DATE_SUB(mlt_transition.mlt_start_date, INTERVAL 1 DAY), DATE('9999-12-31')),
@@ -73,7 +81,7 @@ SELECT
       COALESCE(DATE(tmeta.`Termination Date`), DATE('9999-12-31'))
     ),
     DATE('9999-12-31')
-  ) AS `Salary End Date`,
+  ) AS DATE) AS `Salary End Date`,
   c.`Salary Notes`,
   c.`Employee Number`,
   c.`Last Name`,
