@@ -38,36 +38,120 @@ SELECT
       ELSE NULL
     END,
     CASE
-      WHEN tmeta.`Termination Date` IS NOT NULL
-           AND c.comp_effective_date > DATE(tmeta.`Termination Date`) THEN 'comp effective after termination'
+      WHEN (
+             SELECT MAX(DATE(thp.`Termination Date`))
+             FROM `namely_title_history_data_aq` thp
+             WHERE thp.`Employee Number` = c.`Employee Number`
+               AND DATE(thp.`Termination Date`) < c.comp_effective_date
+           ) IS NOT NULL
+           AND c.comp_effective_date > (
+             SELECT MAX(DATE(thp.`Termination Date`))
+             FROM `namely_title_history_data_aq` thp
+             WHERE thp.`Employee Number` = c.`Employee Number`
+               AND DATE(thp.`Termination Date`) < c.comp_effective_date
+           ) THEN 'comp effective after termination'
       ELSE NULL
     END,
     CASE
-      WHEN tmeta.`Termination Date` IS NOT NULL
-           AND COALESCE(chosen.chosen_date, fb.fb_date) > DATE(tmeta.`Termination Date`) THEN 'title change after termination'
+      WHEN (
+             SELECT MIN(DATE(thn.`Termination Date`))
+             FROM `namely_title_history_data_aq` thn
+             WHERE thn.`Employee Number` = c.`Employee Number`
+               AND DATE(thn.`Termination Date`) >= c.comp_effective_date
+           ) IS NOT NULL
+           AND COALESCE(chosen.chosen_date, fb.fb_date) > (
+             SELECT MIN(DATE(thn.`Termination Date`))
+             FROM `namely_title_history_data_aq` thn
+             WHERE thn.`Employee Number` = c.`Employee Number`
+               AND DATE(thn.`Termination Date`) >= c.comp_effective_date
+           ) THEN 'title change after termination'
       ELSE NULL
     END,
     CASE
-      WHEN tmeta.`Termination Date` IS NOT NULL
-           AND DATE(c.`Salary End Date`) > DATE(tmeta.`Termination Date`) THEN 'salary end after termination'
+      WHEN (
+             SELECT MIN(DATE(thn2.`Termination Date`))
+             FROM `namely_title_history_data_aq` thn2
+             WHERE thn2.`Employee Number` = c.`Employee Number`
+               AND DATE(thn2.`Termination Date`) >= c.comp_effective_date
+           ) IS NOT NULL
+           AND DATE(c.`Salary End Date`) > (
+             SELECT MIN(DATE(thn2.`Termination Date`))
+             FROM `namely_title_history_data_aq` thn2
+             WHERE thn2.`Employee Number` = c.`Employee Number`
+               AND DATE(thn2.`Termination Date`) >= c.comp_effective_date
+           ) THEN 'salary end after termination'
       ELSE NULL
     END,
     CASE
       WHEN DATE(c.`Salary End Date`) IS NOT NULL
-           AND DATE(c.`Start Date`) IS NOT NULL
-           AND DATE(c.`Salary End Date`) < DATE(c.`Start Date`) THEN 'salary end before hire date'
+           AND (
+             SELECT MIN(COALESCE(DATE(t2.`Salary Start Date`), DATE(t2.`Start Date`)))
+             FROM `namely_comp_data_history_w_notes` t2
+             WHERE t2.`Employee Number` = c.`Employee Number`
+               AND COALESCE(DATE(t2.`Salary Start Date`), DATE(t2.`Start Date`)) > COALESCE((
+                     SELECT MAX(DATE(thp2.`Termination Date`))
+                     FROM `namely_title_history_data_aq` thp2
+                     WHERE thp2.`Employee Number` = c.`Employee Number`
+                       AND DATE(thp2.`Termination Date`) < c.comp_effective_date
+                   ), DATE('1900-01-01'))
+               AND COALESCE(DATE(t2.`Salary Start Date`), DATE(t2.`Start Date`)) <= c.comp_effective_date
+           ) IS NOT NULL
+           AND DATE(c.`Salary End Date`) < (
+             SELECT MIN(COALESCE(DATE(t2.`Salary Start Date`), DATE(t2.`Start Date`)))
+             FROM `namely_comp_data_history_w_notes` t2
+             WHERE t2.`Employee Number` = c.`Employee Number`
+               AND COALESCE(DATE(t2.`Salary Start Date`), DATE(t2.`Start Date`)) > COALESCE((
+                     SELECT MAX(DATE(thp2.`Termination Date`))
+                     FROM `namely_title_history_data_aq` thp2
+                     WHERE thp2.`Employee Number` = c.`Employee Number`
+                       AND DATE(thp2.`Termination Date`) < c.comp_effective_date
+                   ), DATE('1900-01-01'))
+               AND COALESCE(DATE(t2.`Salary Start Date`), DATE(t2.`Start Date`)) <= c.comp_effective_date
+           ) THEN 'salary end before hire date'
       ELSE NULL
     END,
     CASE
-      WHEN DATE(c.`Start Date`) IS NOT NULL
-           AND c.comp_effective_date < DATE(c.`Start Date`) THEN 'comp effective before hire date'
+      WHEN (
+             SELECT MIN(COALESCE(DATE(t3.`Salary Start Date`), DATE(t3.`Start Date`)))
+             FROM `namely_comp_data_history_w_notes` t3
+             WHERE t3.`Employee Number` = c.`Employee Number`
+               AND COALESCE(DATE(t3.`Salary Start Date`), DATE(t3.`Start Date`)) > COALESCE((
+                     SELECT MAX(DATE(thp3.`Termination Date`))
+                     FROM `namely_title_history_data_aq` thp3
+                     WHERE thp3.`Employee Number` = c.`Employee Number`
+                       AND DATE(thp3.`Termination Date`) < c.comp_effective_date
+                   ), DATE('1900-01-01'))
+               AND COALESCE(DATE(t3.`Salary Start Date`), DATE(t3.`Start Date`)) <= c.comp_effective_date
+           ) IS NOT NULL
+           AND c.comp_effective_date < (
+             SELECT MIN(COALESCE(DATE(t3.`Salary Start Date`), DATE(t3.`Start Date`)))
+             FROM `namely_comp_data_history_w_notes` t3
+             WHERE t3.`Employee Number` = c.`Employee Number`
+               AND COALESCE(DATE(t3.`Salary Start Date`), DATE(t3.`Start Date`)) > COALESCE((
+                     SELECT MAX(DATE(thp3.`Termination Date`))
+                     FROM `namely_title_history_data_aq` thp3
+                     WHERE thp3.`Employee Number` = c.`Employee Number`
+                       AND DATE(thp3.`Termination Date`) < c.comp_effective_date
+                   ), DATE('1900-01-01'))
+               AND COALESCE(DATE(t3.`Salary Start Date`), DATE(t3.`Start Date`)) <= c.comp_effective_date
+           ) THEN 'comp effective before hire date'
       ELSE NULL
     END,
     CASE
       WHEN UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) = 'TERMINATED'
-           AND tmeta.`Termination Date` IS NOT NULL
+           AND (
+             SELECT MIN(DATE(thn3.`Termination Date`))
+             FROM `namely_title_history_data_aq` thn3
+             WHERE thn3.`Employee Number` = c.`Employee Number`
+               AND DATE(thn3.`Termination Date`) >= c.comp_effective_date
+           ) IS NOT NULL
            AND DATE(c.`Salary End Date`) IS NOT NULL
-           AND DATE(c.`Salary End Date`) <> DATE(tmeta.`Termination Date`) THEN 'terminated title but salary end != termination date'
+           AND DATE(c.`Salary End Date`) <> (
+             SELECT MIN(DATE(thn3.`Termination Date`))
+             FROM `namely_title_history_data_aq` thn3
+             WHERE thn3.`Employee Number` = c.`Employee Number`
+               AND DATE(thn3.`Termination Date`) >= c.comp_effective_date
+           ) THEN 'terminated title but salary end != termination date'
       ELSE NULL
     END
   ) AS `Misalignment Flags`,
@@ -76,12 +160,96 @@ SELECT
     (CASE WHEN UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) = 'TERMINATED' AND tmeta.`Termination Date` IS NULL THEN 1 ELSE 0 END) +
     (CASE WHEN UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) = 'TERMINATED' AND UPPER(TRIM(c.`User Status`)) = 'ACTIVE EMPLOYEE' THEN 1 ELSE 0 END) +
     (CASE WHEN UPPER(TRIM(c.`User Status`)) = 'INACTIVE EMPLOYEE' AND tmeta.`Termination Date` IS NULL THEN 1 ELSE 0 END) +
-    (CASE WHEN tmeta.`Termination Date` IS NOT NULL AND c.comp_effective_date > DATE(tmeta.`Termination Date`) THEN 1 ELSE 0 END) +
-    (CASE WHEN tmeta.`Termination Date` IS NOT NULL AND COALESCE(chosen.chosen_date, fb.fb_date) > DATE(tmeta.`Termination Date`) THEN 1 ELSE 0 END) +
-    (CASE WHEN tmeta.`Termination Date` IS NOT NULL AND DATE(c.`Salary End Date`) > DATE(tmeta.`Termination Date`) THEN 1 ELSE 0 END) +
-    (CASE WHEN DATE(c.`Salary End Date`) IS NOT NULL AND DATE(c.`Start Date`) IS NOT NULL AND DATE(c.`Salary End Date`) < DATE(c.`Start Date`) THEN 1 ELSE 0 END) +
-    (CASE WHEN DATE(c.`Start Date`) IS NOT NULL AND c.comp_effective_date < DATE(c.`Start Date`) THEN 1 ELSE 0 END) +
-    (CASE WHEN UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) = 'TERMINATED' AND tmeta.`Termination Date` IS NOT NULL AND DATE(c.`Salary End Date`) IS NOT NULL AND DATE(c.`Salary End Date`) <> DATE(tmeta.`Termination Date`) THEN 1 ELSE 0 END)
+    (CASE WHEN (
+                  SELECT MAX(DATE(thp.`Termination Date`))
+                  FROM `namely_title_history_data_aq` thp
+                  WHERE thp.`Employee Number` = c.`Employee Number`
+                    AND DATE(thp.`Termination Date`) < c.comp_effective_date
+               ) IS NOT NULL AND c.comp_effective_date > (
+                  SELECT MAX(DATE(thp.`Termination Date`))
+                  FROM `namely_title_history_data_aq` thp
+                  WHERE thp.`Employee Number` = c.`Employee Number`
+                    AND DATE(thp.`Termination Date`) < c.comp_effective_date
+               ) THEN 1 ELSE 0 END) +
+    (CASE WHEN (
+                  SELECT MIN(DATE(thn.`Termination Date`))
+                  FROM `namely_title_history_data_aq` thn
+                  WHERE thn.`Employee Number` = c.`Employee Number`
+                    AND DATE(thn.`Termination Date`) >= c.comp_effective_date
+               ) IS NOT NULL AND COALESCE(chosen.chosen_date, fb.fb_date) > (
+                  SELECT MIN(DATE(thn.`Termination Date`))
+                  FROM `namely_title_history_data_aq` thn
+                  WHERE thn.`Employee Number` = c.`Employee Number`
+                    AND DATE(thn.`Termination Date`) >= c.comp_effective_date
+               ) THEN 1 ELSE 0 END) +
+    (CASE WHEN (
+                  SELECT MIN(DATE(thn2.`Termination Date`))
+                  FROM `namely_title_history_data_aq` thn2
+                  WHERE thn2.`Employee Number` = c.`Employee Number`
+                    AND DATE(thn2.`Termination Date`) >= c.comp_effective_date
+               ) IS NOT NULL AND DATE(c.`Salary End Date`) > (
+                  SELECT MIN(DATE(thn2.`Termination Date`))
+                  FROM `namely_title_history_data_aq` thn2
+                  WHERE thn2.`Employee Number` = c.`Employee Number`
+                    AND DATE(thn2.`Termination Date`) >= c.comp_effective_date
+               ) THEN 1 ELSE 0 END) +
+    (CASE WHEN DATE(c.`Salary End Date`) IS NOT NULL AND (
+                  SELECT MIN(COALESCE(DATE(t2.`Salary Start Date`), DATE(t2.`Start Date`)))
+                  FROM `namely_comp_data_history_w_notes` t2
+                  WHERE t2.`Employee Number` = c.`Employee Number`
+                    AND COALESCE(DATE(t2.`Salary Start Date`), DATE(t2.`Start Date`)) > COALESCE((
+                          SELECT MAX(DATE(thp2.`Termination Date`))
+                          FROM `namely_title_history_data_aq` thp2
+                          WHERE thp2.`Employee Number` = c.`Employee Number`
+                            AND DATE(thp2.`Termination Date`) < c.comp_effective_date
+                        ), DATE('1900-01-01'))
+                    AND COALESCE(DATE(t2.`Salary Start Date`), DATE(t2.`Start Date`)) <= c.comp_effective_date
+               ) IS NOT NULL AND DATE(c.`Salary End Date`) < (
+                  SELECT MIN(COALESCE(DATE(t2.`Salary Start Date`), DATE(t2.`Start Date`)))
+                  FROM `namely_comp_data_history_w_notes` t2
+                  WHERE t2.`Employee Number` = c.`Employee Number`
+                    AND COALESCE(DATE(t2.`Salary Start Date`), DATE(t2.`Start Date`)) > COALESCE((
+                          SELECT MAX(DATE(thp2.`Termination Date`))
+                          FROM `namely_title_history_data_aq` thp2
+                          WHERE thp2.`Employee Number` = c.`Employee Number`
+                            AND DATE(thp2.`Termination Date`) < c.comp_effective_date
+                        ), DATE('1900-01-01'))
+                    AND COALESCE(DATE(t2.`Salary Start Date`), DATE(t2.`Start Date`)) <= c.comp_effective_date
+               ) THEN 1 ELSE 0 END) +
+    (CASE WHEN (
+                  SELECT MIN(COALESCE(DATE(t3.`Salary Start Date`), DATE(t3.`Start Date`)))
+                  FROM `namely_comp_data_history_w_notes` t3
+                  WHERE t3.`Employee Number` = c.`Employee Number`
+                    AND COALESCE(DATE(t3.`Salary Start Date`), DATE(t3.`Start Date`)) > COALESCE((
+                          SELECT MAX(DATE(thp3.`Termination Date`))
+                          FROM `namely_title_history_data_aq` thp3
+                          WHERE thp3.`Employee Number` = c.`Employee Number`
+                            AND DATE(thp3.`Termination Date`) < c.comp_effective_date
+                        ), DATE('1900-01-01'))
+                    AND COALESCE(DATE(t3.`Salary Start Date`), DATE(t3.`Start Date`)) <= c.comp_effective_date
+               ) IS NOT NULL AND c.comp_effective_date < (
+                  SELECT MIN(COALESCE(DATE(t3.`Salary Start Date`), DATE(t3.`Start Date`)))
+                  FROM `namely_comp_data_history_w_notes` t3
+                  WHERE t3.`Employee Number` = c.`Employee Number`
+                    AND COALESCE(DATE(t3.`Salary Start Date`), DATE(t3.`Start Date`)) > COALESCE((
+                          SELECT MAX(DATE(thp3.`Termination Date`))
+                          FROM `namely_title_history_data_aq` thp3
+                          WHERE thp3.`Employee Number` = c.`Employee Number`
+                            AND DATE(thp3.`Termination Date`) < c.comp_effective_date
+                        ), DATE('1900-01-01'))
+                    AND COALESCE(DATE(t3.`Salary Start Date`), DATE(t3.`Start Date`)) <= c.comp_effective_date
+               ) THEN 1 ELSE 0 END) +
+    (CASE WHEN UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) = 'TERMINATED' AND (
+                  SELECT MIN(DATE(thn3.`Termination Date`))
+                  FROM `namely_title_history_data_aq` thn3
+                  WHERE thn3.`Employee Number` = c.`Employee Number`
+                    AND DATE(thn3.`Termination Date`) >= c.comp_effective_date
+               ) IS NOT NULL AND DATE(c.`Salary End Date`) IS NOT NULL AND DATE(c.`Salary End Date`) <> (
+                  SELECT MIN(DATE(thn3.`Termination Date`))
+                  FROM `namely_title_history_data_aq` thn3
+                  WHERE thn3.`Employee Number` = c.`Employee Number`
+                    AND DATE(thn3.`Termination Date`) >= c.comp_effective_date
+               ) THEN 1 ELSE 0 END)
   ) AS `Flag Count`
 FROM (
   SELECT
