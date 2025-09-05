@@ -10,6 +10,7 @@ SELECT
   c.comp_effective_date                                AS `Comp Effective Date`,
   c.`Salary Start Date`,
   c.`Salary End Date`,
+  c.`Salary`,
   c.`Start Date`                                       AS `Hire Date`,
   tmeta.`Termination Date`                             AS `Termination Date`,
   c.`Division`,
