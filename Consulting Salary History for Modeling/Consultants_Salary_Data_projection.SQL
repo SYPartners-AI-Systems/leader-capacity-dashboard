@@ -6,8 +6,14 @@ SELECT
   dept_ou.`Department`                                         AS `Department`,
   COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`)        AS `Job Title`,
   CASE
-    /* 2016-01-01 to 2022-01-31: salary-only mapping via department philosophy */
+    /* Salary-specific override: $250k -> Partner/SVP */
+    WHEN c.`Salary` = 250000 THEN 'Partner/SVP'
+    /* 2016-01-01 to 2022-01-31: salary-only mapping via department philosophy for Partner/Principal titles only */
     WHEN c.comp_effective_date BETWEEN DATE('2016-01-01') AND DATE('2022-01-31')
+      AND (
+        UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) LIKE '%PARTNER%'
+        OR UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) LIKE '%PRINCIPAL%'
+      )
       AND ph_dept_pre.ph_level IS NOT NULL
       THEN ph_dept_pre.ph_level
     /* Salary-based Executive override: $350k+ up to $499,999 */
@@ -39,8 +45,14 @@ SELECT
     'Step ',
     TRIM(REPLACE(UPPER(
       CASE
-        /* 2016-01-01 to 2022-01-31: salary-only mapping via department philosophy */
+        /* Salary-specific override: $250k -> Step 1 */
+        WHEN c.`Salary` = 250000 THEN '1'
+        /* 2016-01-01 to 2022-01-31: salary-only mapping via department philosophy for Partner/Principal titles only */
         WHEN c.comp_effective_date BETWEEN DATE('2016-01-01') AND DATE('2022-01-31')
+          AND (
+            UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) LIKE '%PARTNER%'
+            OR UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) LIKE '%PRINCIPAL%'
+          )
           AND ph_dept_pre.ph_step IS NOT NULL
           THEN ph_dept_pre.ph_step
         /* Salary-based Executive Step override */
@@ -815,6 +827,9 @@ AND NOT (
     UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) LIKE '%FREELANCE%'
     OR UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) LIKE '%FREELANCER%'
     OR UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) LIKE '%INTERN%'
+    OR UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) LIKE '%PRODUCTION DESIGN ASSOCIATE%'
+    OR UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) LIKE '%DESIGN ASSOCIATE%'
+    OR UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) LIKE '%ASSOCIATE STRATEGIST%'
 )
 AND NOT (
     /* Exclude rows with Job Title TERMINATED */
@@ -859,4 +874,6 @@ AND NOT EXISTS (
     FROM `dataflow_schema`.`excluded_roles` er
     WHERE REPLACE(LOWER(TRIM(er.`Job Titles`)), ',', '') = REPLACE(LOWER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))), ',', '')
 )
+AND UPPER(TRIM(c.`Employee Type`)) = 'STAFF FULL TIME'
+AND UPPER(TRIM(COALESCE(div_ou.`Division`, c.`Division`))) = 'CONSULTING'
 ;
