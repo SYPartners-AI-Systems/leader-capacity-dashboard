@@ -65,15 +65,7 @@ SELECT
             'EXECUTIVE DIRECTOR, MIDDLE EAST'
           )
           THEN '1'
-        WHEN UPPER(TRIM(COALESCE(mtit.`Title`, fbtit.`Title`, c.`Job Title`))) IN (
-            'PARTNER & HEAD OF STRATEGY TEAM',
-            'PRINCIPAL, STRATEGY',
-            'PRINCIPAL, DESIGN',
-            'PRINCIPAL & HEAD OF DESIGN TEAM',
-            'PRINCIPAL & HEAD OF PROGRAM MANAGEMENT TEAM',
-            'PRINCIPAL, PROGRAM MANAGEMENT'
-          )
-          THEN '1'  -- All these titles map to Step 1 based on the philosophy table
+        -- Remove hardcoded Step 1 override for Principal group titles; defer to philosophy tables
         WHEN c.comp_effective_date = latest_effective.latest_comp_effective_date
           AND NULLIF(TRIM(c.`Step`), '') IS NOT NULL
           THEN TRIM(c.`Step`)
